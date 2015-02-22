@@ -1,0 +1,55 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use File::Temp qw/tempfile/;
+
+my $PREFIX = $ARGV[0] ? "$ARGV[0]:sar:" : "sar:";
+my (undef, $FILE) = tempfile;
+
+sub query_sar
+{
+	my ($type, $args) = @_;
+	open my $fh, "-|", "/usr/bin/sadf -U -- $args 1 1 $FILE"
+		or die "sadf failed: $!\n";
+
+	my %data = ();
+	for (<$fh>) {
+		chomp;
+		s/%%/%/g;
+		# i.e: |vm01.jhunt 58 1390366861 lo rxerr/s 0.00|
+		next unless m/\S+\s+\d+\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)$/;
+		my ($ts, $key, $attr, $val) = ($1, $2, $3, $4);
+		$attr = "$key.$attr" if $key ne '-';
+		$attr = "$type.$attr" if $type;
+
+		$attr =~ s/[\x00-\x1f"#\$&'()*;<>\\`\x7f]//g;
+		$attr =~ s|/|-|g;
+		$attr =~ s|\.-|.|g;
+
+		$data{"$PREFIX$attr"} = "SAMPLE $ts $PREFIX$attr $val\n";
+	}
+	close $fh;
+
+	print $data{$_} for sort keys %data;
+}
+
+do {
+	print STDERR "gathering data...\n";
+	qx{ /usr/lib/sysstat/sadc -S XALL 5 2 $FILE };
+	print STDERR "streaming data...\n";
+	query_sar paging => '-B';
+	query_sar io => '-b';
+	query_sar blockdev => '-d -j PATH';
+	#query_sar mount => '-F';
+	#query_sar 'net.iface' => '-n DEV';
+	#query_sar 'net.errors' => '-n EDEV';
+	#query_sar '' => '-P ALL';
+	query_sar 'cpu' => '-u ALL';
+	query_sar 'mem' => '-rR';
+	query_sar 'swap' => '-SW';
+	query_sar 'fs' => '-F';
+	query_sar 'ctxt' => '-w';
+	unlink $FILE;
+} while 1;
+
+unlink $FILE;
