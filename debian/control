@@ -1,0 +1,17 @@
+Source: bolo-collectors
+Section: admin
+Priority: optional
+Maintainer: James Hunt <james@jameshunt.us>
+Homepage: https://github.com/filefrog/bolo
+Standards-Version: 3.9.3
+Build-Depends: debhelper (>= 8)
+
+Package: bolo-collectors
+Architecture: any
+Depends: ${misc:Depends}
+Recommends: bolo-clients
+Description: Monitoring System Collectors
+ bolo is a lightweight and scalable monitoring system that can
+ track samples, counters, states and configuration data.
+ .
+ This package provides collectors for system metrics

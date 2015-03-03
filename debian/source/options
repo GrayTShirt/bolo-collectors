@@ -1,0 +1,1 @@
+extend-diff-ignore = '^(src/.*\.pod|dev/|coverage|.*.tar.gz|lcov\.info|t/tmp/|t/full.sh|CHANGELOG|.*.db)'
