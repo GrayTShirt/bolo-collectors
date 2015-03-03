@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use POSIX;
+use Getopt::Long qw/:config bundling/;
+our %OPTIONS = ();
+GetOptions(\%OPTIONS, qw/
+	help|h|?
+	debug|D
+
+	host|H=s
+	log|l=s
+/);
+chomp($OPTIONS{host} = qx(hostname -f))
+	unless $OPTIONS{host};
+$OPTIONS{log} = "/var/log/daemon.log"
+	unless $OPTIONS{log};
+
+my $STATE = "$OPTIONS{host}:cogd";
+
+open my $fh, "<", $OPTIONS{log}
+	or exit(1);
+my $line;
+while (<$fh>) {
+	next unless m/\bcogd\[\d+\]: STATS\(ms\): (.*)/;
+	$line = $1;
+}
+close $fh;
+if ($line =~ m/^
+		 connect=(\d+),\s    hello=(\d+),\s    preinit=(\d+),\s
+		copydown=(\d+),\s    facts=(\d+),\s  getpolicy=(\d+),\s
+		   parse=(\d+),\s  enforce=(\d+),\s    cleanup=(\d+)/x) {
+
+	my $now = time;
+	printf "SAMPLE %i %s:connect %0.3f\n",   $now, $STATE, $1 / 1000;
+	printf "SAMPLE %i %s:hello %0.3f\n",     $now, $STATE, $2 / 1000;
+	printf "SAMPLE %i %s:preinit %0.3f\n",   $now, $STATE, $3 / 1000;
+	printf "SAMPLE %i %s:copydown %0.3f\n",  $now, $STATE, $4 / 1000;
+	printf "SAMPLE %i %s:facts %0.3f\n",     $now, $STATE, $5 / 1000;
+	printf "SAMPLE %i %s:getpolicy %0.3f\n", $now, $STATE, $6 / 1000;
+	printf "SAMPLE %i %s:parse %0.3f\n",     $now, $STATE, $7 / 1000;
+	printf "SAMPLE %i %s:enforce %0.3f\n",   $now, $STATE, $8 / 1000;
+	printf "SAMPLE %i %s:cleanup %0.3f\n",   $now, $STATE, $9 / 1000;
+}
+exit 0;
