@@ -1,0 +1,182 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use POSIX;
+use Getopt::Long qw/:config bundling/;
+our %OPTIONS = ();
+GetOptions(\%OPTIONS, qw/
+	help|h|?
+	debug|D
+
+	host|H=s
+	name|n=s
+	match|m=s
+	children
+/);
+chomp($OPTIONS{host} = qx(hostname -f))
+	unless $OPTIONS{host};
+$OPTIONS{match} = $OPTIONS{name}
+	unless $OPTIONS{match};
+$OPTIONS{name} =~ s|/|_|g;
+
+my $state = "$OPTIONS{host}:process:$OPTIONS{name}";
+
+sub SLURP
+{
+	my ($file) = @_;
+	open my $fh, "<", $file or return undef;
+	if (wantarray) {
+		my @s = <$fh>;
+		close $fh;
+		return @s;
+	} else {
+		my $s = do { local $/; <$fh>; };
+		close $fh;
+		return $s;
+	}
+}
+
+sub STATE
+{
+	my ($status, $summary) = @_;
+	my $ts = time;
+	print "STATE $ts $state $status $summary\n";
+}
+
+sub SAMPLE
+{
+	my ($name, $value) = @_;
+	my $ts = time;
+	print "SAMPLE $ts $name $value\n";
+}
+
+sub smaps
+{
+	my ($file) = @_;
+	my @smaps;
+	my $this;
+
+	open my $fh, "<", $file or return;
+	while (<$fh>) {
+		if (m/^([0-9a-f]+)-([0-9a-f]+) (\S+) ([0-9a-f]+) ([0-9a-f]+:[0-9a-f]+) ([0-9]+)\s+(\S*)$/) {
+			$this = {
+				address => { start => $1, end => $2 },
+				mode    => $3,
+				offset  => hex($4),
+				dev     => $5,
+				inode   => int($6),
+				path    => $7 || '[anon]',
+			};
+			push @smaps, $this;
+			next;
+		}
+		next unless $this;
+
+		   if (m/^(\S+):\s+([0-9]+) kB$/) { $this->{usage}{lc $1} = $2 * 1024; }
+		elsif (m/&(\S+):\s+(.*)$/)        { $this->{usage}{lc $1} = $2; }
+	}
+	close $fh;
+
+	my %sum;
+	for my $m (@smaps) {
+		my $path = $m->{path};
+		$path = '[libs]'  if $path =~ m{/lib/|\.so};
+		$path = '[stack]' if $path =~ m{^\[stack};
+		$path = '[mmap]'  if $path =~ m{^/};
+		$sum{$path}{usage}{$_} += $m->{usage}{$_}
+			for keys $m->{usage};
+	}
+	return \%sum;
+}
+
+sub get_pid
+{
+	my ($regex) = @_;
+	my @pids = split /\n/s, qx|pgrep -f -P 1 $regex|;
+	STATE WARNING => "Multiple parent processes found matching /$regex/"
+		if @pids > 1;
+	return $pids[0]; # just match the first one
+}
+
+sub get_children
+{
+	my ($parent) = @_;
+	my @pids = split /\n/s, qx|pgrep -P $parent|;
+	push @pids, get_children($_) for (@pids);
+	return @pids;
+}
+
+sub pidstats
+{
+	my ($pid, $is_child) = @_;
+	my $data = {};
+	$data->{processes} = 1;
+
+	opendir my $of, $ENV{TEST_PROC_FD} || "/proc/$pid/fd";
+	$data->{openfiles} = scalar(grep { ! /^\./ } readdir $of);
+	close $of;
+
+	for (SLURP $ENV{TEST_PROC_STATUS} || "/proc/$pid/status") {
+		if (m/^(VmPeak|VmSize|VmRSS|VmHWM):\s+(\d+)/) {
+			$data->{lc($1)} = $2 * 1024;
+		}
+		if (m/^Threads:\s+(\d+)/) {
+			$data->{threads} = $1;
+		}
+	}
+
+	my %io;
+	for (SLURP $ENV{TEST_PROC_IO} || "/proc/$pid/io") {
+		$io{$1} = $2 if m/^(.*):\s+(\d+)/;
+	}
+	$data->{io_reads}   = $io{syscr};
+	$data->{io_writes}  = $io{syscw};
+	$data->{io_all_rd}  = $io{rchar};
+	$data->{io_all_wr}  = $io{wchar};
+	$data->{io_disk_rd} = $io{read_bytes};
+	$data->{io_disk_wr} = $io{write_bytes} - $io{cancelled_write_bytes};
+
+	my $smaps = smaps($ENV{TEST_PROC_SMAPS} || "/proc/$pid/smaps");
+	for (qw(heap anon stack libs mmap)) {
+		my $h;
+		$data->{"mem_$_"}  = 0;
+		if ($h = $smaps->{"[$_]"}{usage}) {
+			$data->{"mem_$_"} += $h->{private_clean} + $h->{private_dirty};
+			$data->{"mem_$_"} += $h->{shared_clean}  + $h->{shared_dirty}
+				unless $is_child;
+			$data->{"swp_$_"} = $h->{swap};
+		}
+	}
+
+	my @pidstat = split / /, SLURP $ENV{TEST_PROC_STAT} || "/proc/$pid/stat";
+	$data->{utime}      = $pidstat[13] / CLOCKS_PER_SEC * 1000;
+	$data->{stime}      = $pidstat[14] / CLOCKS_PER_SEC * 1000;
+	$data->{guest_time} = $pidstat[42] / CLOCKS_PER_SEC * 1000;
+	$data->{iowait}     = $pidstat[41] / CLOCKS_PER_SEC * 1000;
+
+	return $data;
+}
+
+my $ppid = get_pid($OPTIONS{match});
+if (!$ppid) {
+	STATE WARNING => "process $OPTIONS{name} ($OPTIONS{match}) not found";
+	exit 0;
+}
+
+my $stats = pidstats($ppid);
+
+if ($OPTIONS{children}) {
+	my @pids = get_children($ppid);
+	for my $kid (@pids) {
+		my $data = pidstats($kid, 1);
+		$stats->{$_} += $data->{$_} for (keys %$data);
+	}
+}
+
+for (keys %$stats) {
+	my $stat = $_;
+	$stat =~ s|/|_|g;
+	SAMPLE "$OPTIONS{host}:proc:$OPTIONS{name}:$stat" => $stats->{$_};
+}
+exit 0;

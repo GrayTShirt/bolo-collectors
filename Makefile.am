@@ -10,6 +10,7 @@ EXTRA_DIST += bootstrap
 collectorsdir=$(libdir)/bolo/collectors
 dist_collectors_SCRIPTS  =
 dist_collectors_SCRIPTS += hostinfo
+dist_collectors_SCRIPTS += process
 dist_collectors_SCRIPTS += sar
 
 ############################################################
