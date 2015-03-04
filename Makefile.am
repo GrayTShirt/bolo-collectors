@@ -12,6 +12,7 @@ dist_collectors_SCRIPTS  =
 dist_collectors_SCRIPTS += cogd
 dist_collectors_SCRIPTS += df
 dist_collectors_SCRIPTS += hostinfo
+dist_collectors_SCRIPTS += openfiles
 dist_collectors_SCRIPTS += process
 dist_collectors_SCRIPTS += sar
 
