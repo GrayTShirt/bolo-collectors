@@ -13,13 +13,13 @@ int collect_stat(void);
 
 int main(int argc, char **argv)
 {
-	if (argc != 2) {
+	if (argc > 2) {
 		fprintf(stderr, "USAGE: %s prefix\n", argv[0]);
 		exit(1);
 	}
 
+	PREFIX = (argc == 2) ? argv[1] : fqdn();
 	int rc = 0;
-	PREFIX = argv[1];
 
 	rc += collect_meminfo();
 	rc += collect_loadavg();
@@ -143,6 +143,7 @@ int collect_stat(void)
 	if (!io)
 		return 1;
 
+	int cpus = 0;
 	int32_t ts = time_s();
 	char buf[8192];
 	while (fgets(buf, 8192, io) != NULL) {
@@ -158,7 +159,10 @@ int collect_stat(void)
 			printf("SAMPLE %i %s:processes:running %s\n", ts, PREFIX, v);
 		else if (strcmp(k, "procs_blocked") == 0)
 			printf("SAMPLE %i %s:processes:blocked %s\n", ts, PREFIX, v);
+		else if (strncmp(k, "cpu", 3) == 0 && isdigit(k[3]))
+			cpus++;
 	}
+	printf("SAMPLE %i %s:load:cpus %i\n", ts, PREFIX, cpus);
 
 	fclose(io);
 	return 0;
