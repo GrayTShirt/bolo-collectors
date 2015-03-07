@@ -40,7 +40,6 @@ query_sar io => '-b';
 query_sar blockdev => '-d -j PATH';
 #query_sar 'net.iface' => '-n DEV';
 #query_sar 'net.errors' => '-n EDEV';
-query_sar 'cpu' => '-u ALL';
 query_sar 'fs' => '-F';
 query_sar 'ctxt' => '-w';
 unlink $FILE;

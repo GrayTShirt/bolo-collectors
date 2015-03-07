@@ -161,6 +161,30 @@ int collect_stat(void)
 			printf("SAMPLE %i %s:processes:blocked %s\n", ts, PREFIX, v);
 		else if (strncmp(k, "cpu", 3) == 0 && isdigit(k[3]))
 			cpus++;
+
+		if (strcmp(k, "cpu") == 0) {
+			while (*v && isspace(*v)) v++;
+			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
+			printf("RATE %i %s:cpu:user %s\n", ts, PREFIX, v); v = k;
+			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
+			printf("RATE %i %s:cpu:nice %s\n", ts, PREFIX, v); v = k;
+			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
+			printf("RATE %i %s:cpu:system %s\n", ts, PREFIX, v); v = k;
+			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
+			printf("RATE %i %s:cpu:idle %s\n", ts, PREFIX, v); v = k;
+			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
+			printf("RATE %i %s:cpu:iowait %s\n", ts, PREFIX, v); v = k;
+			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
+			printf("RATE %i %s:cpu:irq %s\n", ts, PREFIX, v); v = k;
+			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
+			printf("RATE %i %s:cpu:softirq %s\n", ts, PREFIX, v); v = k;
+			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
+			printf("RATE %i %s:cpu:steal %s\n", ts, PREFIX, v); v = k;
+			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
+			printf("RATE %i %s:cpu:guest %s\n", ts, PREFIX, v); v = k;
+			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
+			printf("RATE %i %s:cpu:guest-nice %s\n", ts, PREFIX, v); v = k;
+		}
 	}
 	printf("SAMPLE %i %s:load:cpus %i\n", ts, PREFIX, cpus);
 
