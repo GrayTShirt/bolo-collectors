@@ -13,6 +13,7 @@ int collect_meminfo(void);
 int collect_loadavg(void);
 int collect_stat(void);
 int collect_procs(void);
+int collect_openfiles(void);
 
 int main(int argc, char **argv)
 {
@@ -28,6 +29,7 @@ int main(int argc, char **argv)
 	rc += collect_loadavg();
 	rc += collect_stat();
 	rc += collect_procs();
+	rc += collect_openfiles();
 	return rc;
 }
 
@@ -262,5 +264,39 @@ int collect_procs(void)
 	printf("SAMPLE %i %s:procs:stopped %i\n",  ts, PREFIX, P.stopped);
 	printf("SAMPLE %i %s:procs:paging %i\n",   ts, PREFIX, P.paging);
 	printf("SAMPLE %i %s:procs:unknown %i\n",  ts, PREFIX, P.unknown);
+	return 0;
+}
+
+int collect_openfiles(void)
+{
+	FILE *io = fopen(PROC "/sys/fs/file-nr", "r");
+	if (!io)
+		return 1;
+
+	int32_t ts = time_s();
+	char *a, *b, buf[8192];
+	if (!fgets(buf, 8192, io)) {
+		fclose(io);
+		return 1;
+	}
+
+	a = buf;
+	/* used file descriptors */
+	while (*a &&  isspace(*a)) a++; b = a;
+	while (*b && !isspace(*b)) b++; *b++ = '\0';
+	printf("SAMPLE %i %s:openfiles:used %s\n", ts, PREFIX, a);
+
+	a = b;
+	/* free file descriptors */
+	while (*a &&  isspace(*a)) a++; b = a;
+	while (*b && !isspace(*b)) b++; *b++ = '\0';
+	printf("SAMPLE %i %s:openfiles:free %s\n", ts, PREFIX, a);
+
+	a = b;
+	/* max file descriptors */
+	while (*a &&  isspace(*a)) a++; b = a;
+	while (*b && !isspace(*b)) b++; *b++ = '\0';
+	printf("SAMPLE %i %s:openfiles:max %s\n", ts, PREFIX, a);
+
 	return 0;
 }
