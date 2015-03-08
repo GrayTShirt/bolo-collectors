@@ -12,6 +12,10 @@
 #define PROC "/proc"
 
 static const char *PREFIX;
+static int32_t ts;
+static char buf[8192];
+
+#define streq(a,b) (strcmp((a), (b)) == 0)
 
 int collect_meminfo(void);
 int collect_loadavg(void);
@@ -19,6 +23,7 @@ int collect_stat(void);
 int collect_procs(void);
 int collect_openfiles(void);
 int collect_mounts(void);
+int collect_vmstat(void);
 
 int main(int argc, char **argv)
 {
@@ -36,6 +41,7 @@ int main(int argc, char **argv)
 	rc += collect_procs();
 	rc += collect_openfiles();
 	rc += collect_mounts();
+	rc += collect_vmstat();
 	return rc;
 }
 
@@ -60,8 +66,7 @@ int collect_meminfo(void)
 		uint64_t cached;
 	} S = { 0 };
 	uint64_t x;
-	int32_t ts = time_s();
-	char buf[8192];
+	ts = time_s();
 	while (fgets(buf, 8192, io) != NULL) {
 		/* MemTotal:        6012404 kB\n */
 		char *k, *v, *u, *e;
@@ -86,15 +91,15 @@ int collect_meminfo(void)
 		if (u && *u == 'k')
 			x *= 1024;
 
-		     if (strcmp(k, "MemTotal")   == 0) M.total   = x;
-		else if (strcmp(k, "MemFree")    == 0) M.free    = x;
-		else if (strcmp(k, "Buffers")    == 0) M.buffers = x;
-		else if (strcmp(k, "Cached")     == 0) M.cached  = x;
-		else if (strcmp(k, "Slab")       == 0) M.slab    = x;
+		     if (streq(k, "MemTotal"))   M.total   = x;
+		else if (streq(k, "MemFree"))    M.free    = x;
+		else if (streq(k, "Buffers"))    M.buffers = x;
+		else if (streq(k, "Cached"))     M.cached  = x;
+		else if (streq(k, "Slab"))       M.slab    = x;
 
-		else if (strcmp(k, "SwapTotal")  == 0) S.total   = x;
-		else if (strcmp(k, "SwapFree")   == 0) S.free    = x;
-		else if (strcmp(k, "SwapCached") == 0) S.cached  = x;
+		else if (streq(k, "SwapTotal"))  S.total   = x;
+		else if (streq(k, "SwapFree"))   S.free    = x;
+		else if (streq(k, "SwapCached")) S.cached  = x;
 	}
 
 	M.used = M.total - (M.free + M.buffers + M.cached + M.slab);
@@ -124,7 +129,7 @@ int collect_loadavg(void)
 	double load[3];
 	uint64_t proc[3];
 
-	int32_t ts = time_s();
+	ts = time_s();
 	int rc = fscanf(io, "%lf %lf %lf %lu/%lu ",
 			&load[0], &load[1], &load[2], &proc[0], &proc[1]);
 	fclose(io);
@@ -149,8 +154,7 @@ int collect_stat(void)
 		return 1;
 
 	int cpus = 0;
-	int32_t ts = time_s();
-	char buf[8192];
+	ts = time_s();
 	while (fgets(buf, 8192, io) != NULL) {
 		char *k, *v, *p;
 
@@ -158,14 +162,14 @@ int collect_stat(void)
 		while (*v && !isspace(*v)) v++; *v++ = '\0';
 		p = strchr(v, '\n'); if (p) *p = '\0';
 
-		if (strcmp(k, "processes") == 0)
+		if (streq(k, "processes"))
 			printf("RATE %i %s:ctxt:forks-s %s\n", ts, PREFIX, v);
-		else if (strcmp(k, "ctxt") == 0)
+		else if (streq(k, "ctxt"))
 			printf("RATE %i %s:ctxt:cswch-s %s\n", ts, PREFIX, v);
 		else if (strncmp(k, "cpu", 3) == 0 && isdigit(k[3]))
 			cpus++;
 
-		if (strcmp(k, "cpu") == 0) {
+		if (streq(k, "cpu")) {
 			while (*v && isspace(*v)) v++;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
 			printf("RATE %i %s:cpu:user %s\n", ts, PREFIX, v); v = k;
@@ -213,7 +217,7 @@ int collect_procs(void)
 	if (!d)
 		return 1;
 
-	int32_t ts = time_s();
+	ts = time_s();
 	while ((dir = readdir(d)) != NULL) {
 		if (!isdigit(dir->d_name[0])
 		 || (pid = atoi(dir->d_name)) < 1)
@@ -225,7 +229,7 @@ int collect_procs(void)
 		if (!io)
 			continue;
 
-		char *a, buf[8192];
+		char *a;
 		if (!fgets(buf, 8192, io)) {
 			fclose(io);
 			continue;
@@ -267,8 +271,8 @@ int collect_openfiles(void)
 	if (!io)
 		return 1;
 
-	int32_t ts = time_s();
-	char *a, *b, buf[8192];
+	ts = time_s();
+	char *a, *b;
 	if (!fgets(buf, 8192, io)) {
 		fclose(io);
 		return 1;
@@ -304,8 +308,8 @@ int collect_mounts(void)
 	struct stat st;
 	struct statvfs fs;
 	hash_t seen = {0};
-	char *a, *b, *c, buf[8192];
-	int32_t ts = time_s();
+	char *a, *b, *c;
+	ts = time_s();
 	while (fgets(buf, 8192, io) != NULL) {
 		a = b = buf;
 		for (b = buf; *b && !isspace(*b); b++); *b++ = '\0';
@@ -332,6 +336,47 @@ int collect_mounts(void)
 		printf("SAMPLE %i %s:df:%s:bytes.free %lu\n",  ts, PREFIX, path, fs.f_frsize *  fs.f_bavail);
 		printf("SAMPLE %i %s:df:%s:bytes.rfree %lu\n", ts, PREFIX, path, fs.f_frsize * (fs.f_bfree - fs.f_bavail));
 	}
+
+	fclose(io);
+	return 0;
+}
+
+int collect_vmstat(void)
+{
+	FILE *io = fopen(PROC "/vmstat", "r");
+	if (!io)
+		return 1;
+
+	uint64_t pgsteal = 0;
+	uint64_t pgscan_kswapd = 0;
+	uint64_t pgscan_direct = 0;
+	ts = time_s();
+	while (fgets(buf, 8192, io) != NULL) {
+		char name[64];
+		uint64_t value;
+		int rc = sscanf(buf, "%63s %lu\n", name, &value);
+		if (rc < 2)
+			continue;
+
+#define VMSTAT_SIMPLE(x,n,v,t) do { \
+	if (streq((n), #t)) printf("RATE %i %s:vm:%s %lu\n", ts, PREFIX, #t, (v)); \
+} while (0)
+		VMSTAT_SIMPLE(VM, name, value, pswpin);
+		VMSTAT_SIMPLE(VM, name, value, pswpout);
+		VMSTAT_SIMPLE(VM, name, value, pgpgin);
+		VMSTAT_SIMPLE(VM, name, value, pgpgout);
+		VMSTAT_SIMPLE(VM, name, value, pgfault);
+		VMSTAT_SIMPLE(VM, name, value, pgmajfault);
+		VMSTAT_SIMPLE(VM, name, value, pgfree);
+#undef  VMSTAT_SIMPLE
+
+		if (strncmp(name, "pgsteal_", 8) == 0)        pgsteal       += value;
+		if (strncmp(name, "pgscan_kswapd_", 14) == 0) pgscan_kswapd += value;
+		if (strncmp(name, "pgscan_direct_", 14) == 0) pgscan_direct += value;
+	}
+	printf("RATE %i %s:vm:pgsteal %lu\n",       ts, PREFIX, pgsteal);
+	printf("RATE %i %s:vm:pgscan.kswapd %lu\n", ts, PREFIX, pgscan_kswapd);
+	printf("RATE %i %s:vm:pgscan.direct %lu\n", ts, PREFIX, pgscan_direct);
 
 	fclose(io);
 	return 0;
