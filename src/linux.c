@@ -24,6 +24,7 @@ int collect_procs(void);
 int collect_openfiles(void);
 int collect_mounts(void);
 int collect_vmstat(void);
+int collect_diskstats(void);
 
 int main(int argc, char **argv)
 {
@@ -42,6 +43,7 @@ int main(int argc, char **argv)
 	rc += collect_openfiles();
 	rc += collect_mounts();
 	rc += collect_vmstat();
+	rc += collect_diskstats();
 	return rc;
 }
 
@@ -377,6 +379,47 @@ int collect_vmstat(void)
 	printf("RATE %i %s:vm:pgsteal %lu\n",       ts, PREFIX, pgsteal);
 	printf("RATE %i %s:vm:pgscan.kswapd %lu\n", ts, PREFIX, pgscan_kswapd);
 	printf("RATE %i %s:vm:pgscan.direct %lu\n", ts, PREFIX, pgscan_direct);
+
+	fclose(io);
+	return 0;
+}
+
+static int is_device(char *dev)
+{
+	char *a;
+	for (a = dev; *a; a++)
+		if (*a == '/') *a = '!';
+
+	char *path = string("/sys/block/%s/device", dev);
+	int rc = path && access(path, F_OK) == 0;
+	free(path);
+	return rc;
+}
+
+int collect_diskstats(void)
+{
+	FILE *io = fopen(PROC "/diskstats", "r");
+	if (!io)
+		return 1;
+
+	uint32_t dev[2];
+	uint64_t rd[2], wr[2], _;
+	ts = time_s();
+	while (fgets(buf, 8192, io) != NULL) {
+		char name[32];
+		int rc = sscanf(buf, "%u %u %31s %lu %lu %lu %lu %lu %lu %lu",
+				&dev[0], &dev[1], name,
+				&rd[0], &_, &wr[0], &_, &rd[1], &_, &wr[1]);
+		if (rc != 10)
+			continue;
+		if (!is_device(name))
+			continue;
+
+		printf("RATE %i %s:diskio:%s:rd-iops %lu\n",  ts, PREFIX, name, rd[0]);
+		printf("RATE %i %s:diskio:%s:rd-bytes %lu\n", ts, PREFIX, name, rd[1]);
+		printf("RATE %i %s:diskio:%s:wr-iops %lu\n",  ts, PREFIX, name, wr[0]);
+		printf("RATE %i %s:diskio:%s:wr-bytes %lu\n", ts, PREFIX, name, wr[1]);
+	}
 
 	fclose(io);
 	return 0;
