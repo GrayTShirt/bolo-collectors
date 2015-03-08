@@ -18,8 +18,9 @@ dist_collectors_SCRIPTS += openfiles
 dist_collectors_SCRIPTS += process
 dist_collectors_SCRIPTS += sar
 
-collectors_PROGRAMS = procfs
+collectors_PROGRAMS = procfs df
 procfs_SOURCES = src/procfs.c
+df_SOURCES = src/df.c
 
 ############################################################
 

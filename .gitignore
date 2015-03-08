@@ -18,6 +18,7 @@ build/
 .*.sw*
 
 procfs
+df
 
 *.debhelper.log
 *.debhelper
