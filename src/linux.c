@@ -390,7 +390,7 @@ static int is_device(char *dev)
 	for (a = dev; *a; a++)
 		if (*a == '/') *a = '!';
 
-	char *path = string("/sys/block/%s/device", dev);
+	char *path = string("/sys/block/%s", dev);
 	int rc = path && access(path, F_OK) == 0;
 	free(path);
 	return rc;
