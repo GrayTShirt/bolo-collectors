@@ -159,11 +159,9 @@ int collect_stat(void)
 		p = strchr(v, '\n'); if (p) *p = '\0';
 
 		if (strcmp(k, "processes") == 0)
-			printf("SAMPLE %i %s:processes:threads %s\n", ts, PREFIX, v);
-		else if (strcmp(k, "procs_running") == 0)
-			printf("SAMPLE %i %s:processes:running %s\n", ts, PREFIX, v);
-		else if (strcmp(k, "procs_blocked") == 0)
-			printf("SAMPLE %i %s:processes:blocked %s\n", ts, PREFIX, v);
+			printf("RATE %i %s:ctxt:forks-s %s\n", ts, PREFIX, v);
+		else if (strcmp(k, "ctxt") == 0)
+			printf("RATE %i %s:ctxt:cswch-s %s\n", ts, PREFIX, v);
 		else if (strncmp(k, "cpu", 3) == 0 && isdigit(k[3]))
 			cpus++;
 
