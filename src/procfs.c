@@ -93,8 +93,9 @@ int collect_meminfo(void)
 	printf("SAMPLE %i %s:memory:cached %lu\n",  ts, PREFIX, M.cached);
 	printf("SAMPLE %i %s:memory:slab %lu\n",    ts, PREFIX, M.slab);
 
-	S.free = S.total - S.used;
+	S.free = S.total - (S.used + S.cached);
 	printf("SAMPLE %i %s:swap:total %lu\n",   ts, PREFIX, S.total);
+	printf("SAMPLE %i %s:swap:cached %lu\n",  ts, PREFIX, S.cached);
 	printf("SAMPLE %i %s:swap:used %lu\n",    ts, PREFIX, S.used);
 	printf("SAMPLE %i %s:swap:free %lu\n",    ts, PREFIX, S.free);
 
