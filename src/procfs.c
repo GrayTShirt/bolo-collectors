@@ -132,7 +132,11 @@ int collect_loadavg(void)
 
 	while (*b && *b != '/') b++; a = ++b;
 	while (*b && !isspace(*b)) b++; *b++ = '\0';
-	printf("SAMPLE %i %s:processes:procs %s\n", ts, PREFIX, a);
+	printf("SAMPLE %i %s:load:runnable %s\n", ts, PREFIX, a);
+
+	while (isspace(*b)) b++; a = b;
+	while (*b && !isspace(*b)) b++; *b++ = '\0';
+	printf("SAMPLE %i %s:load:schedulable %s\n", ts, PREFIX, a);
 
 	fclose(io);
 	return 0;
