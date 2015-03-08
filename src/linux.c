@@ -343,39 +343,6 @@ int collect_mounts(void)
 		printf("SAMPLE %i %s:df:%s:bytes.total %lu\n", ts, PREFIX, path, fs.f_frsize *  fs.f_blocks);
 		printf("SAMPLE %i %s:df:%s:bytes.free %lu\n",  ts, PREFIX, path, fs.f_frsize *  fs.f_bavail);
 		printf("SAMPLE %i %s:df:%s:bytes.rfree %lu\n", ts, PREFIX, path, fs.f_frsize * (fs.f_bfree - fs.f_bavail));
-#if 0
-		fprintf(stderr,
-			"f_bsize   = %lu\n"
-			"f_frsize  = %lu\n"
-			"f_blocks  = %lu\n"
-			"f_bfree   = %lu\n"
-			"f_bavail  = %lu\n"
-			"f_bavail  = %lu\n"
-			"f_files   = %lu\n"
-			"f_ffree   = %lu\n"
-			"f_favail  = %lu\n"
-			"f_fsid    = %lu\n"
-			"f_flag    = %lu\n"
-			"f_namemax = %lu\n\n",
-			fs.f_bsize, fs.f_frsize, fs.f_blocks, fs.f_bfree,
-			fs.f_bavail, fs.f_files, fs.f_ffree, fs.f_favail,
-			fs.f_fsid, fs.f_flag, fs.f_namemax);
-
-		struct statvfs {
-			unsigned long  f_bsize;    /* filesystem block size */
-			unsigned long  f_frsize;   /* fragment size */
-			fsblkcnt_t     f_blocks;   /* size of fs in f_frsize units */
-			fsblkcnt_t     f_bfree;    /* # free blocks */
-			fsblkcnt_t     f_bavail;   /* # free blocks for unprivileged users */
-			fsfilcnt_t     f_files;    /* # inodes */
-			fsfilcnt_t     f_ffree;    /* # free inodes */
-			fsfilcnt_t     f_favail;   /* # free inodes for unprivileged users */
-			unsigned long  f_fsid;     /* filesystem ID */
-			unsigned long  f_flag;     /* mount flags */
-			unsigned long  f_namemax;  /* maximum filename length */
-		};
-#endif
-
 	}
 
 	fclose(io);
