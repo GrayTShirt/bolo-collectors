@@ -386,6 +386,10 @@ int collect_vmstat(void)
 
 static int is_device(char *dev)
 {
+	if (strncmp(dev, "loop", 4) == 0
+	 || strncmp(dev, "ram", 3) == 0)
+		return 0;
+
 	char *a;
 	for (a = dev; *a; a++)
 		if (*a == '/') *a = '!';
