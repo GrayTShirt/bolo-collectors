@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <vigor.h>
 #include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #define PROC "/proc"
 
@@ -10,6 +12,7 @@ static const char *PREFIX;
 int collect_meminfo(void);
 int collect_loadavg(void);
 int collect_stat(void);
+int collect_procs(void);
 
 int main(int argc, char **argv)
 {
@@ -24,6 +27,7 @@ int main(int argc, char **argv)
 	rc += collect_meminfo();
 	rc += collect_loadavg();
 	rc += collect_stat();
+	rc += collect_procs();
 	return rc;
 }
 
@@ -192,5 +196,71 @@ int collect_stat(void)
 	printf("SAMPLE %i %s:load:cpus %i\n", ts, PREFIX, cpus);
 
 	fclose(io);
+	return 0;
+}
+
+int collect_procs(void)
+{
+	struct {
+		uint16_t running;
+		uint16_t sleeping;
+		uint16_t zombies;
+		uint16_t stopped;
+		uint16_t paging;
+		uint16_t blocked;
+		uint16_t unknown;
+	} P = {0};
+
+	int pid;
+	struct dirent *dir;
+	DIR *d = opendir(PROC);
+	if (!d)
+		return 1;
+
+	int32_t ts = time_s();
+	while ((dir = readdir(d)) != NULL) {
+		if (!isdigit(dir->d_name[0])
+		 || (pid = atoi(dir->d_name)) < 1)
+			continue;
+
+		char *file = string(PROC "/%i/stat", pid);
+		FILE *io = fopen(file, "r");
+		free(file);
+		if (!io)
+			continue;
+
+		char *a, buf[8192];
+		if (!fgets(buf, 8192, io)) {
+			fclose(io);
+			continue;
+		}
+		fclose(io);
+
+		a = buf;
+		/* skip PID */
+		while (*a && !isspace(*a)) a++;
+		while (*a &&  isspace(*a)) a++;
+		/* skip progname */
+		while (*a && !isspace(*a)) a++;
+		while (*a &&  isspace(*a)) a++;
+
+		switch (*a) {
+		case 'R': P.running++;  break;
+		case 'S': P.sleeping++; break;
+		case 'D': P.blocked++;  break;
+		case 'Z': P.zombies++;  break;
+		case 'T': P.stopped++;  break;
+		case 'W': P.paging++;   break;
+		default:  P.unknown++;  break;
+		}
+	}
+
+	printf("SAMPLE %i %s:procs:running %i\n",  ts, PREFIX, P.running);
+	printf("SAMPLE %i %s:procs:sleeping %i\n", ts, PREFIX, P.sleeping);
+	printf("SAMPLE %i %s:procs:blocked %i\n",  ts, PREFIX, P.blocked);
+	printf("SAMPLE %i %s:procs:zombies %i\n",  ts, PREFIX, P.zombies);
+	printf("SAMPLE %i %s:procs:stopped %i\n",  ts, PREFIX, P.stopped);
+	printf("SAMPLE %i %s:procs:paging %i\n",   ts, PREFIX, P.paging);
+	printf("SAMPLE %i %s:procs:unknown %i\n",  ts, PREFIX, P.unknown);
 	return 0;
 }
