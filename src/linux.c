@@ -121,36 +121,24 @@ int collect_loadavg(void)
 	if (!io)
 		return 1;
 
+	double load[3];
+	uint64_t proc[3];
+
 	int32_t ts = time_s();
-	char buf[8192];
-	if (fgets(buf, 8192, io) == NULL) {
-		fclose(io);
-		return 1;
-	}
-
-	char *a, *b;
-
-	a = b = buf;
-	while (*b && !isspace(*b)) b++; *b++ = '\0';
-	printf("SAMPLE %i %s:load:1min %s\n", ts, PREFIX, a);
-
-	while (isspace(*b)) b++; a = b;
-	while (*b && !isspace(*b)) b++; *b++ = '\0';
-	printf("SAMPLE %i %s:load:5min %s\n", ts, PREFIX, a);
-
-	while (isspace(*b)) b++; a = b;
-	while (*b && !isspace(*b)) b++; *b++ = '\0';
-	printf("SAMPLE %i %s:load:15min %s\n", ts, PREFIX, a);
-
-	while (*b && *b != '/') b++; a = ++b;
-	while (*b && !isspace(*b)) b++; *b++ = '\0';
-	printf("SAMPLE %i %s:load:runnable %s\n", ts, PREFIX, a);
-
-	while (isspace(*b)) b++; a = b;
-	while (*b && !isspace(*b)) b++; *b++ = '\0';
-	printf("SAMPLE %i %s:load:schedulable %s\n", ts, PREFIX, a);
-
+	int rc = fscanf(io, "%lf %lf %lf %lu/%lu ",
+			&load[0], &load[1], &load[2], &proc[0], &proc[1]);
 	fclose(io);
+	if (rc < 5)
+		return 1;
+
+	if (proc[0])
+		proc[0]--; /* don't count us */
+
+	printf("SAMPLE %i %s:load:1min"        " %0.2f\n",  ts, PREFIX, load[0]);
+	printf("SAMPLE %i %s:load:5min"        " %0.2f\n",  ts, PREFIX, load[1]);
+	printf("SAMPLE %i %s:load:15min"       " %0.2f\n",  ts, PREFIX, load[2]);
+	printf("SAMPLE %i %s:load:runnable"    " %lu\n",    ts, PREFIX, proc[0]);
+	printf("SAMPLE %i %s:load:schedulable" " %lu\n",    ts, PREFIX, proc[1]);
 	return 0;
 }
 
