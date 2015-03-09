@@ -384,21 +384,8 @@ int collect_vmstat(void)
 	return 0;
 }
 
-static int is_device(char *dev)
-{
-	if (strncmp(dev, "loop", 4) == 0
-	 || strncmp(dev, "ram", 3) == 0)
-		return 0;
-
-	char *a;
-	for (a = dev; *a; a++)
-		if (*a == '/') *a = '!';
-
-	char *path = string("/sys/block/%s", dev);
-	int rc = path && access(path, F_OK) == 0;
-	free(path);
-	return rc;
-}
+/* FIXME: figure out a better way to detect devices */
+#define is_device(dev) (strncmp((dev), "loop", 4) != 0 && strncmp((dev), "ram", 3) != 0)
 
 int collect_diskstats(void)
 {
