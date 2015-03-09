@@ -394,22 +394,28 @@ int collect_diskstats(void)
 		return 1;
 
 	uint32_t dev[2];
-	uint64_t rd[2], wr[2], _;
+	uint64_t rd[4], wr[4];
 	ts = time_s();
 	while (fgets(buf, 8192, io) != NULL) {
 		char name[32];
-		int rc = sscanf(buf, "%u %u %31s %lu %lu %lu %lu %lu %lu %lu",
+		int rc = sscanf(buf, "%u %u %31s %lu %lu %lu %lu %lu %lu %lu %lu",
 				&dev[0], &dev[1], name,
-				&rd[0], &_, &wr[0], &_, &rd[1], &_, &wr[1]);
-		if (rc != 10)
+				&rd[0], &rd[1], &rd[2], &rd[3],
+				&wr[0], &wr[1], &wr[2], &wr[3]);
+		if (rc != 11)
 			continue;
 		if (!is_device(name))
 			continue;
 
 		printf("RATE %i %s:diskio:%s:rd-iops %lu\n",  ts, PREFIX, name, rd[0]);
-		printf("RATE %i %s:diskio:%s:rd-bytes %lu\n", ts, PREFIX, name, rd[1] * 512);
+		printf("RATE %i %s:diskio:%s:rd-miops %lu\n", ts, PREFIX, name, rd[1]);
+		printf("RATE %i %s:diskio:%s:rd-msec %lu\n",  ts, PREFIX, name, rd[2]);
+		printf("RATE %i %s:diskio:%s:rd-bytes %lu\n", ts, PREFIX, name, rd[3 ] * 512);
+
 		printf("RATE %i %s:diskio:%s:wr-iops %lu\n",  ts, PREFIX, name, wr[0]);
-		printf("RATE %i %s:diskio:%s:wr-bytes %lu\n", ts, PREFIX, name, wr[1] * 512);
+		printf("RATE %i %s:diskio:%s:wr-miops %lu\n", ts, PREFIX, name, wr[1]);
+		printf("RATE %i %s:diskio:%s:wr-msec %lu\n",  ts, PREFIX, name, wr[2]);
+		printf("RATE %i %s:diskio:%s:wr-bytes %lu\n", ts, PREFIX, name, wr[3] * 512);
 	}
 
 	fclose(io);
