@@ -25,6 +25,7 @@ int collect_openfiles(void);
 int collect_mounts(void);
 int collect_vmstat(void);
 int collect_diskstats(void);
+int collect_netdev(void);
 
 int main(int argc, char **argv)
 {
@@ -44,6 +45,7 @@ int main(int argc, char **argv)
 	rc += collect_mounts();
 	rc += collect_vmstat();
 	rc += collect_diskstats();
+	rc += collect_netdev();
 	return rc;
 }
 
@@ -416,6 +418,72 @@ int collect_diskstats(void)
 		printf("RATE %i %s:diskio:%s:wr-miops %lu\n", ts, PREFIX, name, wr[1]);
 		printf("RATE %i %s:diskio:%s:wr-msec %lu\n",  ts, PREFIX, name, wr[2]);
 		printf("RATE %i %s:diskio:%s:wr-bytes %lu\n", ts, PREFIX, name, wr[3] * 512);
+	}
+
+	fclose(io);
+	return 0;
+}
+
+int collect_netdev(void)
+{
+	FILE *io = fopen(PROC "/net/dev", "r");
+	if (!io)
+		return 1;
+
+	ts = time_s();
+	if (fgets(buf, 8192, io) == NULL
+	 || fgets(buf, 8192, io) == NULL) {
+		fclose(io);
+		return 1;
+	}
+
+	struct {
+		uint64_t bytes;
+		uint64_t packets;
+		uint64_t errors;
+		uint64_t drops;
+		uint64_t overruns;
+		uint64_t frames;
+		uint64_t compressed;
+		uint64_t collisions;
+		uint64_t multicast;
+		uint64_t carrier;
+	} tx = {0xff}, rx = {0xff};
+
+	while (fgets(buf, 8192, io) != NULL) {
+		char name[32];
+		int rc = sscanf(buf, " %31s "
+			"%lu %lu %lu %lu %lu %lu %lu %lu "
+			"%lu %lu %lu %lu %lu %lu %lu %lu\n",
+			name,
+			&rx.bytes, &rx.packets, &rx.errors, &rx.drops,
+			&rx.overruns, &rx.frames, &rx.compressed, &rx.multicast,
+			&tx.bytes, &tx.packets, &tx.errors, &tx.drops,
+			&tx.overruns, &tx.collisions, &tx.carrier, &tx.compressed);
+
+		if (rc < 17)
+			continue;
+
+		char *x = strrchr(name, ':');
+		if (x) *x = '\0';
+
+		printf("SAMPLE %i %s:net:%s:rx.bytes %lu\n",      ts, PREFIX, name, rx.bytes);
+		printf("SAMPLE %i %s:net:%s:rx.packets %lu\n",    ts, PREFIX, name, rx.packets);
+		printf("SAMPLE %i %s:net:%s:rx.errors %lu\n",     ts, PREFIX, name, rx.errors);
+		printf("SAMPLE %i %s:net:%s:rx.drops %lu\n",      ts, PREFIX, name, rx.drops);
+		printf("SAMPLE %i %s:net:%s:rx.overruns %lu\n",   ts, PREFIX, name, rx.overruns);
+		printf("SAMPLE %i %s:net:%s:rx.compressed %lu\n", ts, PREFIX, name, rx.compressed);
+		printf("SAMPLE %i %s:net:%s:rx.frames %lu\n",     ts, PREFIX, name, rx.frames);
+		printf("SAMPLE %i %s:net:%s:rx.multicast %lu\n",  ts, PREFIX, name, rx.multicast);
+
+		printf("SAMPLE %i %s:net:%s:tx.bytes %lu\n",      ts, PREFIX, name, tx.bytes);
+		printf("SAMPLE %i %s:net:%s:tx.packets %lu\n",    ts, PREFIX, name, tx.packets);
+		printf("SAMPLE %i %s:net:%s:tx.errors %lu\n",     ts, PREFIX, name, tx.errors);
+		printf("SAMPLE %i %s:net:%s:tx.drops %lu\n",      ts, PREFIX, name, tx.drops);
+		printf("SAMPLE %i %s:net:%s:tx.overruns %lu\n",   ts, PREFIX, name, tx.overruns);
+		printf("SAMPLE %i %s:net:%s:tx.compressed %lu\n", ts, PREFIX, name, tx.compressed);
+		printf("SAMPLE %i %s:net:%s:tx.collisions %lu\n", ts, PREFIX, name, tx.collisions);
+		printf("SAMPLE %i %s:net:%s:tx.carrier %lu\n",    ts, PREFIX, name, tx.carrier);
 	}
 
 	fclose(io);
