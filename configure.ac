@@ -18,7 +18,7 @@
 #
 
 AC_PREREQ(2.68)
-AC_INIT([Bolo Collectors], [0.1.0], [bugs@niftylogic.com])
+AC_INIT([bolo-collectors], [0.1.0], [bugs@niftylogic.com])
 
 AC_CONFIG_SRCDIR([sar])
 AC_CONFIG_AUX_DIR([build])
@@ -27,6 +27,14 @@ AC_CONFIG_MACRO_DIR([build])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
 AC_PROG_CC
+
+AC_CHECK_LIB(vigor,
+	time_s,,
+	AC_MSG_ERROR(Missing libvigor - see http://github.com/filefrog/libvigor))
+
+AC_CHECK_LIB(curl,
+	curl_global_init,,
+	AC_MSG_ERROR(Missing libcurl))
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

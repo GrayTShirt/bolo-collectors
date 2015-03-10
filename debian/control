@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: James Hunt <james@jameshunt.us>
 Homepage: https://github.com/filefrog/bolo
 Standards-Version: 3.9.3
-Build-Depends: libvigor1, libvigor-dev, debhelper (>= 8)
+Build-Depends: libvigor1, libvigor-dev, libcurl3, libcurl4-openssl-dev, debhelper (>= 8)
 
 Package: bolo-collectors
 Architecture: any

@@ -18,6 +18,7 @@ build/
 .*.sw*
 
 linux
+httpd
 
 *.debhelper.log
 *.debhelper
