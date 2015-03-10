@@ -170,7 +170,7 @@ if ($OPTIONS{children}) {
 my $ts = time;
 for (keys %$stats) {
 	printf "%s %i %s:proc:%s:%s %s\n",
-		m/(^io_|time$)/ ? "RATE" : "SAMPLE",
+		m/(^io_|time$|^iowait$)/ ? "RATE" : "SAMPLE",
 		$ts,
 		$OPTIONS{host}, $OPTIONS{name}, $_,
 		$stats->{$_};
