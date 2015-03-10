@@ -12,15 +12,11 @@ LDADD = -lvigor
 collectorsdir=$(libdir)/bolo/collectors
 dist_collectors_SCRIPTS  =
 dist_collectors_SCRIPTS += cogd
-dist_collectors_SCRIPTS += df
 dist_collectors_SCRIPTS += hostinfo
-dist_collectors_SCRIPTS += openfiles
 dist_collectors_SCRIPTS += process
 dist_collectors_SCRIPTS += sar
 
-collectors_PROGRAMS = procfs df linux
-procfs_SOURCES = src/procfs.c
-df_SOURCES = src/df.c
+collectors_PROGRAMS = linux
 linux_SOURCES = src/linux.c
 
 ############################################################
