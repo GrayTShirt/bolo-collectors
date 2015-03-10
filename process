@@ -44,20 +44,6 @@ sub STATE
 	print "STATE $ts $state $status $summary\n";
 }
 
-sub SAMPLE
-{
-	my ($name, $value) = @_;
-	my $ts = time;
-	print "SAMPLE $ts $OPTIONS{host}:proc:$OPTIONS{name}:$name $value\n";
-}
-
-sub RATE
-{
-	my ($name, $value) = @_;
-	my $ts = time;
-	print "RATE $ts $OPTIONS{host}:proc:$OPTIONS{name}:$name $value\n";
-}
-
 sub smaps
 {
 	my ($file) = @_;
@@ -137,12 +123,12 @@ sub pidstats
 	for (SLURP $ENV{TEST_PROC_IO} || "/proc/$pid/io") {
 		$io{$1} = $2 if m/^(.*):\s+(\d+)/;
 	}
-	RATE io_reads   => $io{syscr};
-	RATE io_writes  => $io{syscw};
-	RATE io_all_rd  => $io{rchar};
-	RATE io_all_wr  => $io{wchar};
-	RATE io_disk_rd => $io{read_bytes};
-	RATE io_disk_wr => $io{write_bytes} - $io{cancelled_write_bytes};
+	$data->{io_reads}   = $io{syscr};
+	$data->{io_writes}  = $io{syscw};
+	$data->{io_all_rd}  = $io{rchar};
+	$data->{io_all_wr}  = $io{wchar};
+	$data->{io_disk_rd} = $io{read_bytes};
+	$data->{io_disk_wr} = $io{write_bytes} - $io{cancelled_write_bytes};
 
 	my $smaps = smaps($ENV{TEST_PROC_SMAPS} || "/proc/$pid/smaps");
 	for (qw(heap anon stack libs mmap)) {
@@ -181,7 +167,12 @@ if ($OPTIONS{children}) {
 	}
 }
 
+my $ts = time;
 for (keys %$stats) {
-	SAMPLE $_ => $stats->{$_};
+	printf "%s %i %s:proc:%s:%s %s\n",
+		m/^io_/ ? "RATE" : "SAMPLE",
+		$ts,
+		$OPTIONS{host}, $OPTIONS{name}, $_,
+		$stats->{$_};
 }
 exit 0;
