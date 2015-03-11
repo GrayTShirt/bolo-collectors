@@ -467,23 +467,23 @@ int collect_netdev(void)
 		char *x = strrchr(name, ':');
 		if (x) *x = '\0';
 
-		printf("SAMPLE %i %s:net:%s:rx.bytes %lu\n",      ts, PREFIX, name, rx.bytes);
-		printf("SAMPLE %i %s:net:%s:rx.packets %lu\n",    ts, PREFIX, name, rx.packets);
-		printf("SAMPLE %i %s:net:%s:rx.errors %lu\n",     ts, PREFIX, name, rx.errors);
-		printf("SAMPLE %i %s:net:%s:rx.drops %lu\n",      ts, PREFIX, name, rx.drops);
-		printf("SAMPLE %i %s:net:%s:rx.overruns %lu\n",   ts, PREFIX, name, rx.overruns);
-		printf("SAMPLE %i %s:net:%s:rx.compressed %lu\n", ts, PREFIX, name, rx.compressed);
-		printf("SAMPLE %i %s:net:%s:rx.frames %lu\n",     ts, PREFIX, name, rx.frames);
-		printf("SAMPLE %i %s:net:%s:rx.multicast %lu\n",  ts, PREFIX, name, rx.multicast);
+		printf("RATE %i %s:net:%s:rx.bytes %lu\n",      ts, PREFIX, name, rx.bytes);
+		printf("RATE %i %s:net:%s:rx.packets %lu\n",    ts, PREFIX, name, rx.packets);
+		printf("RATE %i %s:net:%s:rx.errors %lu\n",     ts, PREFIX, name, rx.errors);
+		printf("RATE %i %s:net:%s:rx.drops %lu\n",      ts, PREFIX, name, rx.drops);
+		printf("RATE %i %s:net:%s:rx.overruns %lu\n",   ts, PREFIX, name, rx.overruns);
+		printf("RATE %i %s:net:%s:rx.compressed %lu\n", ts, PREFIX, name, rx.compressed);
+		printf("RATE %i %s:net:%s:rx.frames %lu\n",     ts, PREFIX, name, rx.frames);
+		printf("RATE %i %s:net:%s:rx.multicast %lu\n",  ts, PREFIX, name, rx.multicast);
 
-		printf("SAMPLE %i %s:net:%s:tx.bytes %lu\n",      ts, PREFIX, name, tx.bytes);
-		printf("SAMPLE %i %s:net:%s:tx.packets %lu\n",    ts, PREFIX, name, tx.packets);
-		printf("SAMPLE %i %s:net:%s:tx.errors %lu\n",     ts, PREFIX, name, tx.errors);
-		printf("SAMPLE %i %s:net:%s:tx.drops %lu\n",      ts, PREFIX, name, tx.drops);
-		printf("SAMPLE %i %s:net:%s:tx.overruns %lu\n",   ts, PREFIX, name, tx.overruns);
-		printf("SAMPLE %i %s:net:%s:tx.compressed %lu\n", ts, PREFIX, name, tx.compressed);
-		printf("SAMPLE %i %s:net:%s:tx.collisions %lu\n", ts, PREFIX, name, tx.collisions);
-		printf("SAMPLE %i %s:net:%s:tx.carrier %lu\n",    ts, PREFIX, name, tx.carrier);
+		printf("RATE %i %s:net:%s:tx.bytes %lu\n",      ts, PREFIX, name, tx.bytes);
+		printf("RATE %i %s:net:%s:tx.packets %lu\n",    ts, PREFIX, name, tx.packets);
+		printf("RATE %i %s:net:%s:tx.errors %lu\n",     ts, PREFIX, name, tx.errors);
+		printf("RATE %i %s:net:%s:tx.drops %lu\n",      ts, PREFIX, name, tx.drops);
+		printf("RATE %i %s:net:%s:tx.overruns %lu\n",   ts, PREFIX, name, tx.overruns);
+		printf("RATE %i %s:net:%s:tx.compressed %lu\n", ts, PREFIX, name, tx.compressed);
+		printf("RATE %i %s:net:%s:tx.collisions %lu\n", ts, PREFIX, name, tx.collisions);
+		printf("RATE %i %s:net:%s:tx.carrier %lu\n",    ts, PREFIX, name, tx.carrier);
 	}
 
 	fclose(io);
