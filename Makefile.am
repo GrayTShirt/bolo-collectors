@@ -14,7 +14,6 @@ dist_collectors_SCRIPTS  =
 dist_collectors_SCRIPTS += cogd
 dist_collectors_SCRIPTS += hostinfo
 dist_collectors_SCRIPTS += process
-dist_collectors_SCRIPTS += sar
 
 collectors_PROGRAMS = linux httpd
 linux_SOURCES = src/linux.c

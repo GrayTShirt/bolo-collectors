@@ -20,7 +20,7 @@
 AC_PREREQ(2.68)
 AC_INIT([bolo-collectors], [0.1.0], [bugs@niftylogic.com])
 
-AC_CONFIG_SRCDIR([sar])
+AC_CONFIG_SRCDIR([src/linux.c])
 AC_CONFIG_AUX_DIR([build])
 AC_CONFIG_MACRO_DIR([build])
 
