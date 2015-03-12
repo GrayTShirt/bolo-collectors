@@ -36,5 +36,9 @@ AC_CHECK_LIB(curl,
 	curl_global_init,,
 	AC_MSG_ERROR(Missing libcurl))
 
+AC_CHECK_LIB(pq,
+	PQconnectdb,,
+	AC_MSG_ERROR(Missing libpq - Postgres Client Library))
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

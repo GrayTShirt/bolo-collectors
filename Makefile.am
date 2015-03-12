@@ -15,7 +15,7 @@ dist_collectors_SCRIPTS += cogd
 dist_collectors_SCRIPTS += hostinfo
 dist_collectors_SCRIPTS += process
 
-collectors_PROGRAMS = linux httpd fw files rrdcache
+collectors_PROGRAMS = linux httpd fw files rrdcache postgres
 linux_SOURCES = src/linux.c
 httpd_SOURCES = src/httpd.c
 httpd_LDADD   = -lcurl
@@ -24,6 +24,8 @@ fw_LDADD      = -lip4tc -lip6tc
 files_SOURCES = src/files.c
 rrdcache_SOURCES = src/rrdcache.c
 rrdcache_LDADD   = -lrrd
+postgres_SOURCES = src/postgres.c
+postgres_LDADD   = -lpq
 
 ############################################################
 
