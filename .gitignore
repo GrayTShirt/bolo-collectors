@@ -19,6 +19,7 @@ build/
 
 linux
 httpd
+fw
 
 *.debhelper.log
 *.debhelper

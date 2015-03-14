@@ -4,11 +4,17 @@ Priority: optional
 Maintainer: James Hunt <james@jameshunt.us>
 Homepage: https://github.com/filefrog/bolo
 Standards-Version: 3.9.3
-Build-Depends: libvigor1, libvigor-dev, libcurl3, libcurl4-openssl-dev, debhelper (>= 8)
+Build-Depends: debhelper (>= 8),
+               iptables,
+               iptables-dev,
+               libcurl3,
+               libcurl4-openssl-dev,
+               libvigor-dev,
+               libvigor1
 
 Package: bolo-collectors
 Architecture: any
-Depends: libvigor1, ${shlibs:Depends}, ${misc:Depends}
+Depends: libvigor1, ${misc:Depends}, ${shlibs:Depends}
 Recommends: bolo-clients
 Description: Monitoring System Collectors
  bolo is a lightweight and scalable monitoring system that can
