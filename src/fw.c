@@ -91,6 +91,7 @@ int main(int argc, char **argv)
 	if (error)
 		return 1;
 
+	ts = time_s();
 	char *name;
 	struct xtc_handle *table;
 	for_each_key_value(&tables, name, table) {
