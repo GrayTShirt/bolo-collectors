@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 {
 	PREFIX = fqdn();
 
-	if (argc == 0) {
+	if (argc == 1) {
 		fprintf(stderr, "USAGE: %s filter:CHAIN:comment ...\n", argv[0]);
 		exit(1);
 	}
