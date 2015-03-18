@@ -14,7 +14,11 @@ int main(int argc, char **argv)
 	PREFIX = fqdn();
 
 	rrdc_stats_t *head = NULL, *p;
-	int rc = rrdc_connect("unix:/tmp/rrdcached.sock");
+
+	char *daemon = getenv("RRDCACHED_ADDRESS");
+	if (!daemon) daemon = "unix:/tmp/rrdcached.sock";
+
+	int rc = rrdc_connect(daemon);
 	assert(rc == 0);
 
 	ts = time_s();
