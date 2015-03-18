@@ -9,6 +9,8 @@ Build-Depends: debhelper (>= 8),
                iptables-dev,
                libcurl3,
                libcurl4-openssl-dev,
+               librrd-dev,
+               librrd4,
                libvigor-dev,
                libvigor1
 
