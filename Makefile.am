@@ -15,13 +15,15 @@ dist_collectors_SCRIPTS += cogd
 dist_collectors_SCRIPTS += hostinfo
 dist_collectors_SCRIPTS += process
 
-collectors_PROGRAMS = linux httpd fw files
+collectors_PROGRAMS = linux httpd fw files rrdcache
 linux_SOURCES = src/linux.c
 httpd_SOURCES = src/httpd.c
 httpd_LDADD   = -lcurl
 fw_SOURCES    = src/fw.c
 fw_LDADD      = -lip4tc -lip6tc
 files_SOURCES = src/files.c
+rrdcache_SOURCES = src/rrdcache.c
+rrdcache_LDADD   = -lrrd
 
 ############################################################
 

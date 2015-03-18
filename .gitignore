@@ -21,6 +21,7 @@ linux
 httpd
 files
 fw
+rrdcache
 
 *.debhelper.log
 *.debhelper
