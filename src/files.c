@@ -79,6 +79,7 @@ static const char *PR_TYPE_NAMES[] = {
 
 typedef struct {
 	char *path;
+	char *name;
 	int   time_start;
 	int   xdev;
 	int   aggregate;
@@ -463,12 +464,19 @@ int main(int argc, char **argv)
 	ctx.path = strdup(argv[1]);
 	if (ctx.path[0] == '-')
 		s_usage(argv[0]);
+	ctx.name = strdup(ctx.path);
 
 	int i;
 	for (i = 2; i < argc - 1; i++) {
 		if (strcmp(argv[i], "--") == 0) {
 			i++;
 			break;
+		}
+		if (strcmp(argv[i], "-name") == 0) {
+			i++; if (!argv[i]) s_usage(argv[0]);
+			free(ctx.name);
+			ctx.name = strdup(argv[i]);
+			continue;
 		}
 		if (strcmp(argv[i], "-debug") == 0) {
 			ctx.debug = 1;
@@ -551,10 +559,10 @@ int main(int argc, char **argv)
 	PREFIX = fqdn();
 	ts = time_s();
 	if (ctx.track == TRACK_COUNT) {
-		printf("SAMPLE %i %s:files:NAME %lu\n", ts, PREFIX, ctx.count);
+		printf("SAMPLE %i %s:files:%s %lu\n", ts, PREFIX, ctx.name, ctx.count);
 
 	} else if (ctx.track == TRACK_SIZE) {
-		printf("SAMPLE %i %s:files:NAME ", ts, PREFIX);
+		printf("SAMPLE %i %s:files:%s ", ts, PREFIX, ctx.name);
 
 		switch (ctx.aggregate) {
 		case AGGREGATE_SUM: printf("%lu\n", ctx.size.sum); break;
