@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 	rc = rrdc_stats_get(&head);
 	assert(rc == 0);
 	for (p = head; p; p = p->next) {
-		printf("%s %i %s:rrdcache:%s %e\n",
+		printf("%s %i %s:rrdcache:%s %0.3f\n",
 			p->type == RRDC_STATS_TYPE_GAUGE ? "SAMPLE" : "RATE",
 			ts, PREFIX, p->name,
 			p->type == RRDC_STATS_TYPE_GAUGE ? p->value.gauge : p->value.counter);
