@@ -142,6 +142,11 @@ int main(int argc, char **argv)
 			free(port);
 			port = strdup(optarg);
 			break;
+
+		case 'd':
+			free(database);
+			database = strdup(optarg);
+			break;
 		}
 	}
 
