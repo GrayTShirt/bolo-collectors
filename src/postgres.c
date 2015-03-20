@@ -100,9 +100,9 @@ int main(int argc, char **argv)
 	PREFIX = fqdn();
 
 	char *creds    = NULL;
-	char *database = "postgres";
-	char *host     = "localhost";
-	char *port     = "5432";
+	char *database = strdup("postgres");
+	char *host     = strdup("localhost");
+	char *port     = strdup("5432");
 
 	const char *short_opts = "h?p:c:d:H:P:";
 	struct option long_opts[] = {
