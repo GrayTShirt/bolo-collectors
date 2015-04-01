@@ -171,6 +171,7 @@ int main(int argc, char **argv)
 	PGconn *db = PQconnectdb(dsn);
 	assert(db);
 	if (PQstatus(db) != CONNECTION_OK) {
+		PQfinish(db);
 		fprintf(stderr, "connection failed\n");
 		return 1;
 	}
@@ -182,5 +183,6 @@ int main(int argc, char **argv)
 	}
 	run_queries(db, io);
 	fclose(io);
+	PQfinish(db);
 	return 0;
 }
