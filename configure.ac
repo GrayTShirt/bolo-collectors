@@ -28,17 +28,12 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
 AC_PROG_CC
 
-AC_CHECK_LIB(vigor,
-	time_s,,
-	AC_MSG_ERROR(Missing libvigor - see http://github.com/filefrog/libvigor))
-
-AC_CHECK_LIB(curl,
-	curl_global_init,,
-	AC_MSG_ERROR(Missing libcurl))
-
-AC_CHECK_LIB(pq,
-	PQconnectdb,,
-	AC_MSG_ERROR(Missing libpq - Postgres Client Library))
+AC_HAVE_LIBRARY(vigor,,    AC_MSG_ERROR(Missing libvigor - see http://github.com/filefrog/libvigor))
+AC_HAVE_LIBRARY(curl,,     AC_MSG_ERROR(Missing cURL library))
+AC_HAVE_LIBRARY(rrd,,      AC_MSG_ERROR(Missing RRD library))
+AC_HAVE_LIBRARY(pq,,       AC_MSG_ERROR(Missing Postgres library))
+AC_HAVE_LIBRARY(ip4tc,,    AC_MSG_ERROR(Missing iptables v4 library))
+AC_HAVE_LIBRARY(ip6tc,,    AC_MSG_ERROR(Missing iptables v6 library))
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
