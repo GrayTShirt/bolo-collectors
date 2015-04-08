@@ -1,10 +1,12 @@
-bolo-collectors - Metrics Collectors for Bolo
-=============================================
+bolo-collectors - Collectors for Bolo
+=====================================
 
 [bolo][bolo] is a toolkit for building distributed, scalable
-monitoring systems.  **bolo-collectors** is a set of scripts that
-gather raw telemetry and format it for consumption by bolo
-utilities like dbolo and send_bolo.
+monitoring systems.
+
+**bolo-collectors** is a set of utilities that gather raw
+telemetry and format it for consumption by bolo utilities like
+dbolo and send_bolo.
 
 Getting Started
 ---------------
