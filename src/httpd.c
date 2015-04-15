@@ -2,10 +2,9 @@
 #include <vigor.h>
 #include <curl/curl.h>
 
-#define UA PACKAGE_NAME " (nginx)/" PACKAGE_VERSION
+#include "common.h"
 
-static const char *PREFIX;
-static int32_t ts;
+#define UA PACKAGE_NAME " (nginx)/" PACKAGE_VERSION
 
 static size_t ng_writer(void *buf, size_t each, size_t n, void *user)
 {

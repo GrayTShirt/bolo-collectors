@@ -1,21 +1,10 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <vigor.h>
-#include <string.h>
-#include <sys/types.h>
+#include "common.h"
 #include <dirent.h>
 #include <sys/statvfs.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #define PROC "/proc"
 
-static const char *PREFIX;
-static int32_t ts;
 static char buf[8192];
-
-#define streq(a,b) (strcmp((a), (b)) == 0)
 
 int collect_meminfo(void);
 int collect_loadavg(void);

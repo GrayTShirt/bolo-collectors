@@ -1,21 +1,6 @@
-#define _GNU_SOURCE
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "common.h"
 #include <fts.h>
 #include <fnmatch.h>
-#include <vigor.h>
-
-static char *PREFIX;
-static int32_t ts;
-
-#define MIN(a,b) ((a) > (b) ? (b) : (a))
-#define MAX(a,b) ((a) < (b) ? (b) : (a))
 
 #define OP_NOT  3
 #define OP_AND  2

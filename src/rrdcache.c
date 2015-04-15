@@ -1,13 +1,8 @@
-#include <assert.h>
-#include <stdio.h>
-#include <vigor.h>
+#include "common.h"
 
 #define HAVE_STDINT_H
 #include <rrd.h>
 #include <rrd_client.h>
-
-static const char *PREFIX;
-static int32_t ts;
 
 int main(int argc, char **argv)
 {

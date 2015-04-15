@@ -1,12 +1,5 @@
-#include <assert.h>
-#include <stdio.h>
+#include "common.h"
 #include <postgresql/libpq-fe.h>
-#include <getopt.h>
-#include <string.h>
-#include <vigor.h>
-
-static char *PREFIX;
-static int32_t ts;
 
 static int column(PGresult *r, const char *name) {
 	int c = PQfnumber(r, name);

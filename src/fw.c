@@ -1,11 +1,5 @@
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <vigor.h>
+#include "common.h"
 #include <libiptc/libiptc.h>
-
-static const char *PREFIX;
-static int32_t ts;
 
 typedef struct {
 	list_t l;
