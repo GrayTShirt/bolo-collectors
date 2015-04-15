@@ -75,6 +75,34 @@ int parse_options(int argc, char **argv)
 			continue;
 		}
 
+		if (streq(argv[i], "-h") || streq(argv[i], "-?") || streq(argv[i], "--help")) {
+			fprintf(stdout, "linux (a Bolo collector)\n"
+			                "USAGE: linux [flags] [metrics]\n"
+			                "\n"
+			                "flags:\n"
+			                "   -h, --help               Show this help screen\n"
+			                "   -p, --prefix PREFIX      Use the given metric prefix\n"
+			                "                            (FQDN is used by default)\n"
+			                "\n"
+			                "metrics:\n"
+			                "\n"
+			                "   (no)mem           Memory utilization metrics\n"
+			                "   (no)load          System Load Average metrics\n"
+			                "   (no)cpu           CPU utilization (aggregate) metrics\n"
+			                "   (no)procs         Process creation / context switching metrics\n"
+			                "   (no)openfiles     Open File Descriptor metrics\n"
+			                "   (no)mounts        Mountpoints and disk space usage metrics\n"
+			                "   (no)paging        Virtual Memory paging statistics\n"
+			                "   (no)disk          Disk I/O and utilization metrics\n"
+			                "   (no)net           Network interface metrics\n"
+			                "\n"
+			                "   By default, all metrics are collected.  You can suppress specific\n"
+			                "   metric sets by prefixing its name with \"no\", without having to\n"
+			                "   list out everything you want explicitly.\n"
+			                "\n");
+			exit(0);
+		}
+
 		#define KEYWORD(k,n) do { \
 			if (streq(argv[i],      k)) {  RUN(n); nflagged++; continue; } \
 			if (streq(argv[i], "no" k)) { SKIP(n);             continue; } \
