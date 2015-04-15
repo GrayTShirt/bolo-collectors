@@ -65,7 +65,7 @@ int parse_options(int argc, char **argv)
 
 	int i;
 	for (i = 1; i < argc; ++i) {
-		if (strcmp(argv[i], "-p") == 0) {
+		if (streq(argv[i], "-p")) {
 			if (++i >= argc) {
 				fprintf(stderr, "Missing required value for -p\n");
 				return 1;
@@ -75,8 +75,8 @@ int parse_options(int argc, char **argv)
 		}
 
 		#define KEYWORD(k,n) do { \
-			if (strcmp(argv[i],      k) == 0) {  RUN(n); nflagged++; continue; } \
-			if (strcmp(argv[i], "no" k) == 0) { SKIP(n);             continue; } \
+			if (streq(argv[i],      k)) {  RUN(n); nflagged++; continue; } \
+			if (streq(argv[i], "no" k)) { SKIP(n);             continue; } \
 		} while (0)
 
 		KEYWORD("mem",       "meminfo");
