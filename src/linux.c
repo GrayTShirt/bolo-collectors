@@ -66,7 +66,7 @@ int parse_options(int argc, char **argv)
 
 	int i;
 	for (i = 1; i < argc; ++i) {
-		if (streq(argv[i], "-p")) {
+		if (streq(argv[i], "-p") || streq(argv[i], "--prefix")) {
 			if (++i >= argc) {
 				fprintf(stderr, "Missing required value for -p\n");
 				return 1;
