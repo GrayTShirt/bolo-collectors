@@ -61,6 +61,7 @@ int main(int argc, char **argv)
 
 int parse_options(int argc, char **argv)
 {
+	int errors = 0;
 	int nflagged = 0;
 
 	int i;
@@ -90,6 +91,9 @@ int parse_options(int argc, char **argv)
 		KEYWORD("net",       "netdev");
 
 		#undef KEYWORD
+
+		fprintf(stderr, "Unrecognized argument '%s'\n", argv[i]);
+		errors++;
 	}
 	if (!PREFIX) PREFIX = fqdn();
 
@@ -104,7 +108,7 @@ int parse_options(int argc, char **argv)
 		if (!masked("disk"))      RUN("disk");
 		if (!masked("net"))       RUN("net");
 	}
-	return 0;
+	return errors;
 }
 
 int collect_meminfo(void)
