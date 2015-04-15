@@ -27,26 +27,84 @@ int collect_vmstat(void);
 int collect_diskstats(void);
 int collect_netdev(void);
 
+static hash_t MASK = { 0 };
+#define RUN_TAG  (void*)(1)
+#define SKIP_TAG (void*)(2)
+#define masked(s) (hash_get(&MASK, (s)) != NULL)
+#define should(s) (hash_get(&MASK, (s)) == RUN_TAG)
+#define RUN(s)     hash_set(&MASK, (s), RUN_TAG)
+#define SKIP(s)    hash_set(&MASK, (s), SKIP_TAG)
+
+int parse_options(int argc, char **argv);
+
 int main(int argc, char **argv)
 {
-	if (argc > 2) {
-		fprintf(stderr, "USAGE: %s prefix\n", argv[0]);
+	if (parse_options(argc, argv) != 0) {
+		fprintf(stderr, "USAGE: %s [-p prefix]\n", argv[0]);
 		exit(1);
 	}
 
-	PREFIX = (argc == 2) ? argv[1] : fqdn();
 	int rc = 0;
-
-	rc += collect_meminfo();
-	rc += collect_loadavg();
-	rc += collect_stat();
-	rc += collect_procs();
-	rc += collect_openfiles();
-	rc += collect_mounts();
-	rc += collect_vmstat();
-	rc += collect_diskstats();
-	rc += collect_netdev();
+	#define TRY_STAT(rc,s) if (should(#s)) (rc) += collect_ ## s ()
+	TRY_STAT(rc, meminfo);
+	TRY_STAT(rc, loadavg);
+	TRY_STAT(rc, stat);
+	TRY_STAT(rc, procs);
+	TRY_STAT(rc, openfiles);
+	TRY_STAT(rc, mounts);
+	TRY_STAT(rc, vmstat);
+	TRY_STAT(rc, diskstats);
+	TRY_STAT(rc, netdev);
+	#undef TRY_STAT
 	return rc;
+}
+
+int parse_options(int argc, char **argv)
+{
+	int nflagged = 0;
+
+	int i;
+	for (i = 1; i < argc; ++i) {
+		if (strcmp(argv[i], "-p") == 0) {
+			if (++i >= argc) {
+				fprintf(stderr, "Missing required value for -p\n");
+				return 1;
+			}
+			PREFIX = strdup(argv[i]);
+			continue;
+		}
+
+		#define KEYWORD(k,n) do { \
+			if (strcmp(argv[i],      k) == 0) {  RUN(n); nflagged++; continue; } \
+			if (strcmp(argv[i], "no" k) == 0) { SKIP(n);             continue; } \
+		} while (0)
+
+		KEYWORD("mem",       "meminfo");
+		KEYWORD("load",      "loadavg");
+		KEYWORD("cpu",       "stat");
+		KEYWORD("procs",     "procs");
+		KEYWORD("openfiles", "openfiles");
+		KEYWORD("mounts",    "mounts");
+		KEYWORD("paging",    "vmstat");
+		KEYWORD("disk",      "diskstats");
+		KEYWORD("net",       "netdev");
+
+		#undef KEYWORD
+	}
+	if (!PREFIX) PREFIX = fqdn();
+
+	if (nflagged == 0) {
+		if (!masked("meminfo"))   RUN("meminfo");
+		if (!masked("loadavg"))   RUN("loadavg");
+		if (!masked("stat"))      RUN("stat");
+		if (!masked("procs"))     RUN("procs");
+		if (!masked("openfiles")) RUN("openfiles");
+		if (!masked("mounts"))    RUN("mounts");
+		if (!masked("paging"))    RUN("paging");
+		if (!masked("disk"))      RUN("disk");
+		if (!masked("net"))       RUN("net");
+	}
+	return 0;
 }
 
 int collect_meminfo(void)
