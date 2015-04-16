@@ -113,7 +113,21 @@ int main(int argc, char **argv)
 		switch (opt) {
 		case 'h':
 		case '?':
-			fprintf(stderr, "USAGE: %s [OPTIONS] /path/to/queries.sql\n", argv[0]);
+			fprintf(stdout, "postgres (a Bolo collector)\n"
+			                "USAGE: postgres [options] /path/to/queries.sql\n"
+			                "\n"
+			                "options:\n"
+			                "   -h, --help               Show this help screen\n"
+			                "   -p, --prefix PREFIX      Use the given metric prefix\n"
+			                "                            (FQDN is used by default)\n"
+			                "   -c, --credentials FILE   Path to a file with username / password\n"
+			                "   -d, --database NAME      Database to connect to\n"
+			                "                            (Defaults to 'postgres')\n"
+			                "   -H, --host ADDRESS       Hostname or IP to connect to\n"
+			                "                            (Defaults to localhost)\n"
+			                "   -P, --port NUMBER        TCP port to connect to\n"
+			                "                            (Defaults to 5432)\n"
+			                "\n");
 			exit(0);
 
 		case 'p':
@@ -144,7 +158,7 @@ int main(int argc, char **argv)
 	}
 
 	if (!argv[optind]) {
-		fprintf(stderr, "USAGE: %s [OPTIONS] /path/to/queries.sql\n", argv[0]);
+		fprintf(stderr, "USAGE: %s [options] /path/to/queries.sql\n", argv[0]);
 		return 1;
 	}
 
