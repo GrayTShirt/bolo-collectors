@@ -57,6 +57,58 @@ static int collect_nginx(const char *url)
 	return 0;
 }
 
+static size_t apache_writer(void *buf, size_t each, size_t n, void *user)
+{
+	uint64_t v[4];
+	double b;
+
+	if (sscanf(buf, "Total Accesses: %lu\n"
+	                "Total kBytes: %lu\n"
+	                "Uptime: %*u\n"
+	                "ReqPerSec: %*f\n"
+	                "BytesPerSec: %*f\n"
+	                "BytesPerReq: %lf\n"
+	                "BusyWorkers: %lu\n"
+	                "IdleWorkers: %lu\n",
+	                &v[0], &v[1], &b, &v[2], &v[3]) == 5) {
+
+		int32_t ts = time_s();
+		printf("RATE %i %s:apache:requests.total %lu\n", ts, PREFIX, v[0]);
+		printf("RATE %i %s:apache:requests.bytes %lu\n", ts, PREFIX, v[1] * 1024);
+		printf("SAMPLE %i %s:apache:request.size %lf\n", ts, PREFIX, b);
+		printf("SAMPLE %i %s:apache:workers.busy %lu\n", ts, PREFIX, v[2]);
+		printf("SAMPLE %i %s:apache:workers.idle %lu\n", ts, PREFIX, v[3]);
+	}
+	return n * each;
+}
+
+static int collect_apache(const char *url)
+{
+	int rc = 0;
+
+	if (!url)
+		url = "http://localhost/server-status?auto";
+
+	curl_global_init(CURL_GLOBAL_ALL);
+	CURL *c = curl_easy_init();
+	if (!c)
+		return 1;
+
+	char error[CURL_ERROR_SIZE];
+	curl_easy_setopt(c, CURLOPT_NOSIGNAL,      1);
+	curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, apache_writer);
+	curl_easy_setopt(c, CURLOPT_USERAGENT,     UA);
+	curl_easy_setopt(c, CURLOPT_ERRORBUFFER,   error);
+	curl_easy_setopt(c, CURLOPT_URL,           url);
+
+	if (curl_easy_perform(c) != CURLE_OK) {
+		fprintf(stderr, "e:%s\n", error);
+		return 2;
+	}
+
+	return 0;
+}
+
 static char *URL = NULL;
 static int (*COLLECTOR)(const char *);
 int parse_options(int argc, char **argv);
@@ -96,6 +148,10 @@ int parse_options(int argc, char **argv)
 				COLLECTOR = collect_nginx;
 				continue;
 			}
+			if (streq(argv[i], "apache")) {
+				COLLECTOR = collect_apache;
+				continue;
+			}
 			fprintf(stderr, "Unrecognized HTTP server type '%s'\n", argv[i]);
 			return 1;
 		}
@@ -109,7 +165,7 @@ int parse_options(int argc, char **argv)
 			                "   -p, --prefix PREFIX      Use the given metric prefix\n"
 			                "                            (FQDN is used by default)\n"
 			                "   -t, --type TYPE          What type of HTTP server.  Default to 'nginx'\n"
-			                "                            Valid values: nginx\n"
+			                "                            Valid values: apache, nginx\n"
 			                "\n");
 			exit(0);
 		}
