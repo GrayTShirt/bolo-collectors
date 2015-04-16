@@ -1,15 +1,41 @@
 #!/usr/bin/perl
 
-chomp(my $fqdn = qx(hostname -f));
+sub usage
+{
+	print <<EOF;
+hostinfo (a Bolo collector)
+USAGE: hostinfo [options]
+
+options:
+   -h, --help               Show this help screen
+   -p, --prefix PREFIX      Use the given metric prefix
+                            (FQDN is used by default)
+
+EOF
+	exit 0;
+}
+
+use POSIX;
+use Getopt::Long qw/:config bundling/;
+our %OPTIONS = ();
+GetOptions(\%OPTIONS, qw/
+	help|h|?
+
+	prefix|p=s
+/) or usage();
+usage() if $OPTIONS{help};
+chomp($OPTIONS{prefix} = qx(hostname -f))
+	unless $OPTIONS{prefix};
+
 open my $fh, "<", "/etc/mtab"
 	or die "failed to open /etc/mtab: $!\n";
 
-print "KEY $fqdn:host\n";
+print "KEY $OPTIONS{prefix}:host\n";
 while (<$fh>) {
 	next unless m{^/};
 	my ($dev, $path) = split ' ';
 
-	print "KEY $fqdn:fs:$path\n";
-	print "KEY $fqdn:dev:$dev\n";
+	print "KEY $OPTIONS{prefix}:fs:$path\n";
+	print "KEY $OPTIONS{prefix}:dev:$dev\n";
 }
 close $fh;
