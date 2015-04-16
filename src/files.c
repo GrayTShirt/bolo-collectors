@@ -261,8 +261,8 @@ static expr_t* s_resolve(parser_t *p)
 	return e;
 }
 
-#define OPER(p,a,s,op)   if (strcmp((a),(s)) == 0) { s_push_op((p), OP_ ## op);      (p)->i++; continue; }
-#define PRED(p,a,s,pr,v) if (strcmp((a),(s)) == 0) { s_push_pr((p), PR_ ## pr, (v)); (p)->i++; continue; }
+#define OPER(p,a,s,op)   if (streq((a),(s))) { s_push_op((p), OP_ ## op);      (p)->i++; continue; }
+#define PRED(p,a,s,pr,v) if (streq((a),(s))) { s_push_pr((p), PR_ ## pr, (v)); (p)->i++; continue; }
 static expr_t* s_parse(parser_t *p)
 {
 	while (p->i < p->argc) {
@@ -453,7 +453,7 @@ int main(int argc, char **argv)
 
 	int i;
 	for (i = 2; i < argc - 1; i++) {
-		if (strcmp(argv[i], "--") == 0) {
+		if (streq(argv[i], "--")) {
 			i++;
 			break;
 		}
@@ -463,11 +463,11 @@ int main(int argc, char **argv)
 			ctx.name = strdup(argv[i]);
 			continue;
 		}
-		if (strcmp(argv[i], "-debug") == 0) {
+		if (streq(argv[i], "-debug")) {
 			ctx.debug = 1;
 			continue;
 		}
-		if (strcmp(argv[i], "-dumptree") == 0) {
+		if (streq(argv[i], "-dumptree")) {
 			ctx.dumptree = 1;
 			continue;
 		}
