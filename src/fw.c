@@ -52,24 +52,26 @@ static int s_matcher(const struct ipt_entry_match *m, const struct ipt_entry *e,
 	return 0;
 }
 
+char **RULES;
+int parse_options(int argc, char **argv);
+
 int main(int argc, char **argv)
 {
-	PREFIX = fqdn();
-
-	if (argc == 1) {
-		fprintf(stderr, "USAGE: %s filter:CHAIN:comment ...\n", argv[0]);
+	if (parse_options(argc, argv) != 0) {
+		fprintf(stderr, "USAGE: %s [options] rule [rule ...]\n", argv[0]);
 		exit(1);
 	}
+	assert(RULES[0]);
 
 	hash_t tables = { 0 };
 	LIST(rules);
 
 	rule_t *rule;
 	int i, error = 0;
-	for (i = 1; i < argc; i++) {
-		rule = s_parse_rule(argv[i]);
+	for (i = 0; RULES[i]; i++) {
+		rule = s_parse_rule(RULES[i]);
 		if (!rule) {
-			fprintf(stderr, "invalid rule '%s'\n", argv[i]);
+			fprintf(stderr, "invalid rule '%s'\n", RULES[i]);
 			error++;
 			continue;
 		}
@@ -105,4 +107,46 @@ int main(int argc, char **argv)
 		}
 	}
 	return 0;
+}
+
+int parse_options(int argc, char **argv)
+{
+	int errors = 0;
+
+	int i;
+	for (i = 1; i < argc; i++) {
+		if (streq(argv[i], "-p") || streq(argv[i], "--prefix")) {
+			if (++i >= argc) {
+				fprintf(stderr, "Missing required value for -p\n");
+				return 1;
+			}
+			PREFIX = strdup(argv[i]);
+			continue;
+		}
+
+		if (streq(argv[i], "-h") || streq(argv[i], "-?") || streq(argv[i], "--help")) {
+			fprintf(stdout, "fw (a Bolo collector)\n"
+			                "USAGE: fw [options] rule [rule ...]\n"
+			                "\n"
+			                "options:\n"
+			                "   -h, --help               Show this help screen\n"
+			                "   -p, --prefix PREFIX      Use the given metric prefix\n"
+			                "                            (FQDN is used by default)\n"
+			                "\n"
+			                "Rules must be specified in the form\n"
+			                "\n"
+			                "    filter:CHAIN:comment\n"
+			                "\n"
+			                "At least one rule must be specified; all will be evaluated\n"
+			                "together, in parallel\n"
+			                "You may need to quote these, if <comment> contains spaces.\n"
+			                "\n");
+			exit(0);
+		}
+
+		break;
+	}
+	if (!PREFIX) PREFIX = fqdn();
+	RULES = argv + i;
+	return argv[i] == NULL ? 1 : 0;
 }
