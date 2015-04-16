@@ -2,6 +2,28 @@
 use strict;
 use warnings;
 
+sub usage
+{
+	print <<EOF;
+process (a Bolo collector)
+USAGE: process [options]
+
+options:
+   -h, --help               Show this help screen
+   -p, --prefix PREFIX      Use the given metric prefix
+                            (FQDN is used by default)
+   -n, --name NAME          Name of the process to look for
+   -m, --match PATTERN      A PCRE regex for matching processes
+   --children               Aggregate data from child processes
+
+note: this collector does not support systemd, and will only find
+      processes that are children of init (PID 1).
+      You will probably need to be root to run this collector.
+
+EOF
+	exit 0;
+}
+
 use POSIX;
 use Getopt::Long qw/:config bundling/;
 our %OPTIONS = ();
@@ -9,23 +31,24 @@ GetOptions(\%OPTIONS, qw/
 	help|h|?
 	debug|D
 
-	host|H=s
+	prefix|p=s
 	name|n=s
 	match|m=s
 	children
-/);
-chomp($OPTIONS{host} = qx(hostname -f))
-	unless $OPTIONS{host};
+/) or usage();
+usage() if $OPTIONS{help};
+chomp($OPTIONS{prefix} = qx(hostname -f))
+	unless $OPTIONS{prefix};
 $OPTIONS{match} = $OPTIONS{name}
 	unless $OPTIONS{match};
 $OPTIONS{name} =~ s|/|_|g;
 
-my $state = "$OPTIONS{host}:process:$OPTIONS{name}";
+my $state = "$OPTIONS{prefix}:process:$OPTIONS{name}";
 
 sub SLURP
 {
 	my ($file) = @_;
-	open my $fh, "<", $file or return undef;
+	open my $fh, "<", $file or return;
 	if (wantarray) {
 		my @s = <$fh>;
 		close $fh;
@@ -42,6 +65,12 @@ sub STATE
 	my ($status, $summary) = @_;
 	my $ts = time;
 	print "STATE $ts $state $status $summary\n";
+}
+
+sub DEBUG
+{
+	return unless $OPTIONS{debug};
+	print STDERR "$_\n" for @_;
 }
 
 sub smaps
@@ -86,6 +115,7 @@ sub smaps
 sub get_pid
 {
 	my ($regex) = @_;
+	DEBUG "Running `pgrep -f -P 1 $regex`";
 	my @pids = split /\n/s, qx|pgrep -f -P 1 $regex|;
 	STATE WARNING => "Multiple parent processes found matching /$regex/"
 		if @pids > 1;
@@ -106,9 +136,11 @@ sub pidstats
 	my $data = {};
 	$data->{processes} = 1;
 
-	opendir my $of, $ENV{TEST_PROC_FD} || "/proc/$pid/fd";
-	$data->{openfiles} = scalar(grep { ! /^\./ } readdir $of);
-	close $of;
+	my $of;
+	opendir $of, $ENV{TEST_PROC_FD} || "/proc/$pid/fd" and do {
+		$data->{openfiles} = scalar(grep { ! /^\./ } readdir $of);
+		close $of;
+	};
 
 	for (SLURP $ENV{TEST_PROC_STATUS} || "/proc/$pid/status") {
 		if (m/^(VmPeak|VmSize|VmRSS|VmHWM):\s+(\d+)/) {
@@ -123,12 +155,14 @@ sub pidstats
 	for (SLURP $ENV{TEST_PROC_IO} || "/proc/$pid/io") {
 		$io{$1} = $2 if m/^(.*):\s+(\d+)/;
 	}
-	$data->{io_reads}   = $io{syscr};
-	$data->{io_writes}  = $io{syscw};
-	$data->{io_all_rd}  = $io{rchar};
-	$data->{io_all_wr}  = $io{wchar};
-	$data->{io_disk_rd} = $io{read_bytes};
-	$data->{io_disk_wr} = $io{write_bytes} - $io{cancelled_write_bytes};
+	if (%io) {
+		$data->{io_reads}   = $io{syscr};
+		$data->{io_writes}  = $io{syscw};
+		$data->{io_all_rd}  = $io{rchar};
+		$data->{io_all_wr}  = $io{wchar};
+		$data->{io_disk_rd} = $io{read_bytes};
+		$data->{io_disk_wr} = $io{write_bytes} - $io{cancelled_write_bytes};
+	}
 
 	my $smaps = smaps($ENV{TEST_PROC_SMAPS} || "/proc/$pid/smaps");
 	for (qw(heap anon stack libs mmap)) {
@@ -172,7 +206,7 @@ for (keys %$stats) {
 	printf "%s %i %s:proc:%s:%s %s\n",
 		m/(^io_|time$|^iowait$)/ ? "RATE" : "SAMPLE",
 		$ts,
-		$OPTIONS{host}, $OPTIONS{name}, $_,
+		$OPTIONS{prefix}, $OPTIONS{name}, $_,
 		$stats->{$_};
 }
 exit 0;
