@@ -43,8 +43,8 @@ static rule_t* s_parse_rule(const char *s)
 
 static int s_matcher(const struct ipt_entry_match *m, const struct ipt_entry *e, rule_t *r)
 {
-	if (strcmp(m->u.user.name, "comment") == 0
-	 && strcmp((char *) m->data, r->comment) == 0) {
+	if (streq(m->u.user.name, "comment")
+	 && streq((char *) m->data, r->comment)) {
 
 		printf("RATE %i %s:fw:%s:%s:%s.bytes   %llu\n", ts, PREFIX, r->table, r->chain, r->comment, e->counters.bcnt);
 		printf("RATE %i %s:fw:%s:%s:%s.packets %llu\n", ts, PREFIX, r->table, r->chain, r->comment, e->counters.pcnt);
@@ -97,8 +97,8 @@ int main(int argc, char **argv)
 
 		for (chain = iptc_first_chain(table); chain; chain = iptc_next_chain(table)) {
 			for_each_object(rule, &rules, l) {
-				if (strcmp(rule->table, name)  != 0
-				 || strcmp(rule->chain, chain) != 0)
+				if (!streq(rule->table, name)
+				 || !streq(rule->chain, chain))
 					continue;
 
 				for (entry = iptc_first_rule(chain, table); entry; entry = iptc_next_rule(entry, table))

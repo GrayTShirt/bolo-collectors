@@ -170,7 +170,7 @@ int main(int argc, char **argv)
 	}
 
 	FILE *io = stdin;
-	if (strcmp(argv[optind], "-") != 0) {
+	if (!streq(argv[optind], "-")) {
 		io = fopen(argv[optind], "r");
 		if (!io) perror(argv[optind]);
 	}
