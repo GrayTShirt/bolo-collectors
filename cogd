@@ -2,6 +2,26 @@
 use strict;
 use warnings;
 
+sub usage
+{
+	print <<EOF;
+cogd (a Bolo collector)
+USAGE: cogd [options]
+
+options:
+   -h, --help               Show this help screen
+   -p, --prefix PREFIX      Use the given metric prefix
+                            (FQDN is used by default)
+   -l, --log FILENAME       Log to parse cogd stats data from.
+                            (Defaults to /var/log/daemon.log)
+
+For this collector to work, cogd needs to be logging at
+NOTICE level or higher.
+
+EOF
+	exit 0;
+}
+
 use POSIX;
 use Getopt::Long qw/:config bundling/;
 our %OPTIONS = ();
@@ -9,15 +29,16 @@ GetOptions(\%OPTIONS, qw/
 	help|h|?
 	debug|D
 
-	host|H=s
+	prefix|p=s
 	log|l=s
-/);
-chomp($OPTIONS{host} = qx(hostname -f))
-	unless $OPTIONS{host};
+/) or usage();
+usage() if $OPTIONS{help};
+chomp($OPTIONS{prefix} = qx(hostname -f))
+	unless $OPTIONS{prefix};
 $OPTIONS{log} = "/var/log/daemon.log"
 	unless $OPTIONS{log};
 
-my $STATE = "$OPTIONS{host}:cogd";
+my $STATE = "$OPTIONS{prefix}:cogd";
 
 open my $fh, "<", $OPTIONS{log}
 	or exit(1);
