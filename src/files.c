@@ -431,16 +431,31 @@ static void s_track(context_t *c, FTSENT *e)
 	c->size.sum += e->fts_statp->st_size;
 }
 
-static void s_usage(const char *bin)
+static void s_usage(void)
 {
-	fprintf(stderr, "USAGE: %s /path/to/dir [check-options] -- [find-options]\n", bin);
-	exit(1);
+	printf("files (a Bolo collector)\n"
+	                "USAGE: files <path> [options] -- <find(1) arguments>\n"
+	                "\n"
+	                "options:\n"
+	                "\n"
+	                "   -h, -help                Show this help screen\n"
+	                "   -p, -prefix PREFIX       Use the given metric prefix\n"
+	                "                            (FQDN is used by default)\n"
+	                "   -name NAME               Alternate name for files check\n"
+	                "                            (Defaults to <path>)\n"
+	                "   -debug                   Trace execution to standard error\n"
+	                "   -track count             Track number of matching files (default)\n"
+	                "   -track size              Track aggregated size of matching files\n"
+	                "   -aggr (sum|min|max|avg)  Use the given summary function\n"
+	                "                            (Only useful with `-track size`)\n"
+	                "\n");
+	exit(0);
 }
 
 int main(int argc, char **argv)
 {
 	if (argc < 2)
-		s_usage(argv[0]);
+		s_usage();
 
 	context_t ctx = { 0 };
 	ctx.track     = TRACK_COUNT;
@@ -448,7 +463,7 @@ int main(int argc, char **argv)
 
 	ctx.path = strdup(argv[1]);
 	if (ctx.path[0] == '-')
-		s_usage(argv[0]);
+		s_usage();
 	ctx.name = strdup(ctx.path);
 
 	int i;
@@ -457,8 +472,13 @@ int main(int argc, char **argv)
 			i++;
 			break;
 		}
-		if (strcmp(argv[i], "-name") == 0) {
-			i++; if (!argv[i]) s_usage(argv[0]);
+
+		if (streq(argv[i], "-h") || streq(argv[i], "-?") || streq(argv[i], "-help")) {
+			s_usage();
+		}
+
+		if (streq(argv[i], "-name")) {
+			i++; if (!argv[i]) s_usage();
 			free(ctx.name);
 			ctx.name = strdup(argv[i]);
 			continue;
@@ -471,16 +491,16 @@ int main(int argc, char **argv)
 			ctx.dumptree = 1;
 			continue;
 		}
-		if (strcmp(argv[i], "-track") == 0) {
-			i++; if (!argv[i]) s_usage(argv[0]);
+		if (streq(argv[i], "-track")) {
+			i++; if (!argv[i]) s_usage();
 
 			     if (strcasecmp(argv[i], "count") == 0) ctx.track = TRACK_COUNT;
 			else if (strcasecmp(argv[i], "size")  == 0) ctx.track = TRACK_SIZE;
-			else s_usage(argv[0]);
+			else s_usage();
 			continue;
 		}
-		if (strcmp(argv[i], "-aggregate") == 0 || strcmp(argv[i], "-aggr") == 0) {
-			i++; if (!argv[i]) s_usage(argv[0]);
+		if (streq(argv[i], "-aggregate") || streq(argv[i], "-aggr")) {
+			i++; if (!argv[i]) s_usage();
 
 			if (strcasecmp(argv[i], "sum") == 0)
 				ctx.aggregate = AGGREGATE_SUM;
@@ -490,7 +510,7 @@ int main(int argc, char **argv)
 				ctx.aggregate = AGGREGATE_MAX;
 			else if (strcasecmp(argv[i], "avg") == 0 || strcasecmp(argv[i], "average") == 0)
 				ctx.aggregate = AGGREGATE_AVG;
-			else s_usage(argv[0]);
+			else s_usage();
 		}
 	}
 
@@ -503,7 +523,7 @@ int main(int argc, char **argv)
 	}
 
 	if (!argv[i])
-		s_usage(argv[0]);
+		s_usage();
 
 	parser_t p = { .i = i, .argc = argc, .argv = argv, .debug = ctx.dumptree };
 	expr_t *root = s_parse(&p);
