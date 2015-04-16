@@ -573,7 +573,7 @@ int main(int argc, char **argv)
 		case AGGREGATE_SUM: printf("%lu\n", ctx.size.sum); break;
 		case AGGREGATE_MIN: printf("%lu\n", ctx.size.min); break;
 		case AGGREGATE_MAX: printf("%lu\n", ctx.size.max); break;
-		case AGGREGATE_AVG: printf("%e\n",  1.0 * ctx.size.sum / ctx.count); break;
+		case AGGREGATE_AVG: printf("%lf\n",  1.0 * ctx.size.sum / ctx.count); break;
 		default: printf("0\n");
 		}
 
