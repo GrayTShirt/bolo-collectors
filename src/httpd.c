@@ -34,6 +34,8 @@ static int collect_nginx(const char *url)
 {
 	int rc = 0;
 
+	if (!url)
+		url = "http://localhost/nginx_status";
 
 	curl_global_init(CURL_GLOBAL_ALL);
 	CURL *c = curl_easy_init();
@@ -55,13 +57,71 @@ static int collect_nginx(const char *url)
 	return 0;
 }
 
+static char *URL = NULL;
+static int (*COLLECTOR)(const char *);
+int parse_options(int argc, char **argv);
+
 int main(int argc, char **argv)
 {
-	if (argc > 3 || argc < 2) {
-		fprintf(stderr, "USAGE: %s [prefix] URL\n", argv[0]);
+	if (parse_options(argc, argv) != 0) {
+		fprintf(stderr, "USAGE: %s [options] URL\n", argv[0]);
 		exit(1);
 	}
 
-	PREFIX = (argc == 3) ? argv[1] : fqdn();
-	return collect_nginx(argc == 3 ? argv[2] : argv[1]);
+	return COLLECTOR(URL);
+}
+
+int parse_options(int argc, char **argv)
+{
+	COLLECTOR = collect_nginx; /* default */
+	int errors = 0;
+
+	int i;
+	for (i = 1; i < argc; i++) {
+		if (streq(argv[i], "-p") || streq(argv[i], "--prefix")) {
+			if (++i >= argc) {
+				fprintf(stderr, "Missing required value for -p\n");
+				return 1;
+			}
+			PREFIX = strdup(argv[i]);
+			continue;
+		}
+
+		if (streq(argv[i], "-t") || streq(argv[i], "--type")) {
+			if (++i >= argc) {
+				fprintf(stderr, "Missing required value for -t\n");
+				return 1;
+			}
+			if (streq(argv[i], "nginx")) {
+				COLLECTOR = collect_nginx;
+				continue;
+			}
+			fprintf(stderr, "Unrecognized HTTP server type '%s'\n", argv[i]);
+			return 1;
+		}
+
+		if (streq(argv[i], "-h") || streq(argv[i], "-?") || streq(argv[i], "--help")) {
+			fprintf(stdout, "httpd (a Bolo collector)\n"
+			                "USAGE: httpd [options] URL\n"
+			                "\n"
+			                "options:\n"
+			                "   -h, --help               Show this help screen\n"
+			                "   -p, --prefix PREFIX      Use the given metric prefix\n"
+			                "                            (FQDN is used by default)\n"
+			                "   -t, --type TYPE          What type of HTTP server.  Default to 'nginx'\n"
+			                "                            Valid values: nginx\n"
+			                "\n");
+			exit(0);
+		}
+
+		if (!URL && argv[i][0] != '-') {
+			URL = strdup(argv[i]);
+
+		} else {
+			fprintf(stderr, "Unrecognized argument '%s'\n", argv[i]);
+			errors++;
+		}
+	}
+	if (!PREFIX) PREFIX = fqdn();
+	return errors;
 }
