@@ -121,9 +121,9 @@ int parse_options(int argc, char **argv)
 		if (!masked("procs"))     RUN("procs");
 		if (!masked("openfiles")) RUN("openfiles");
 		if (!masked("mounts"))    RUN("mounts");
-		if (!masked("paging"))    RUN("paging");
-		if (!masked("disk"))      RUN("disk");
-		if (!masked("net"))       RUN("net");
+		if (!masked("vmstat"))    RUN("vmstat");
+		if (!masked("diskstats")) RUN("diskstats");
+		if (!masked("netdev"))    RUN("netdev");
 	}
 	return errors;
 }
