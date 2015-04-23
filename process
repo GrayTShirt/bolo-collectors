@@ -209,4 +209,5 @@ for (keys %$stats) {
 		$OPTIONS{prefix}, $OPTIONS{name}, $_,
 		$stats->{$_};
 }
+STATE OK => "process $OPTIONS{name} ($OPTIONS{match}) found";
 exit 0;
