@@ -17,7 +17,7 @@
 #  with Bolo.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-AC_PREREQ(2.68)
+AC_PREREQ(2.63)
 AC_INIT([bolo-collectors], [0.1.0], [bugs@niftylogic.com])
 
 AC_CONFIG_SRCDIR([src/linux.c])
