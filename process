@@ -117,8 +117,10 @@ sub get_pid
 	my ($regex) = @_;
 	DEBUG "Running `pgrep -f -P 1 $regex`";
 	my @pids = split /\n/s, qx|pgrep -f -P 1 $regex|;
-	STATE WARNING => "Multiple parent processes found matching /$regex/"
+	STATE WARNING => "Multiple parent processes found matching `$regex'"
 		if @pids > 1;
+	STATE OK => "Found process matching `$regex'"
+		if @pids == 1;
 	return $pids[0]; # just match the first one
 }
 
@@ -187,7 +189,7 @@ sub pidstats
 
 my $ppid = get_pid($OPTIONS{match});
 if (!$ppid) {
-	STATE WARNING => "process $OPTIONS{name} ($OPTIONS{match}) not found";
+	STATE WARNING => "process $OPTIONS{name} (matching `$OPTIONS{match}') not found";
 	exit 0;
 }
 
