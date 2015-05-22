@@ -34,7 +34,7 @@ endif
 
 if build_rrdcache_collector
 collectors_PROGRAMS += rrdcache
-rrdcache_SOURCES = src/rrdcache.c src/common.
+rrdcache_SOURCES = src/rrdcache.c src/common.h
 rrdcache_LDADD   = -lrrd
 endif
 
