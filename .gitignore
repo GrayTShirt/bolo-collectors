@@ -24,6 +24,8 @@ fw
 rrdcache
 postgres
 
+bolo-collectors-*.tar.gz
+
 *.debhelper.log
 *.debhelper
 *.substvars
