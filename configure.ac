@@ -85,22 +85,22 @@ AC_ARG_WITH([all-collectors],
 BOLO_COLLECTOR([rrdcache], [auto], [metrics from an RRDtool write-caching daemon],
 	[#include <rrd.h>
 	 #include <rrd_client.h>
-	 int main() { return 0 }
+	 int main() { return 0; }
 	], [-lrrd])
 
 BOLO_COLLECTOR([fw], [auto], [metrics from a host-based IP firewall],
 	[#include <libiptc/libiptc.h>
-	 int main() { return 0 }
-	], [-lip4tc -lip5tc])
+	 int main() { return 0; }
+	], [-lip4tc -lip6tc])
 
 BOLO_COLLECTOR([postgres], [auto], [metrics by running PostgreSQL database queries],
 	[#include <postgresql/libpq-fe.h>
-	 int main() { return 0 }
+	 int main() { return 0; }
 	], [-lpq])
 
 BOLO_COLLECTOR([httpd], [auto], [metrics from web server daemons],
 	[#include <curl/curl.h>
-	 int main() { return 0 }
+	 int main() { return 0; }
 	], [-lcurl])
 
 
