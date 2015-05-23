@@ -44,6 +44,12 @@ postgres_SOURCES = src/postgres.c src/common.h
 postgres_LDADD   = -lpq
 endif
 
+if build_mysql_collector
+collectors_PROGRAMS += mysql
+mysql_SOURCES    = src/mysql.c src/common.h
+mysql_LDADD      = -ldl
+endif
+
 ############################################################
 
 version:

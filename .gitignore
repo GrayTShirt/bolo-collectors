@@ -23,6 +23,7 @@ files
 fw
 rrdcache
 postgres
+mysql
 
 bolo-collectors-*.tar.gz
 
