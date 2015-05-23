@@ -57,7 +57,7 @@ AC_DEFUN([BOLO_COLLECTOR],
 
 
 AC_PREREQ(2.63)
-AC_INIT([bolo-collectors], [0.1.0], [bugs@niftylogic.com])
+AC_INIT([bolo-collectors], [0.2.0], [bugs@niftylogic.com])
 
 AC_CONFIG_SRCDIR([src/linux.c])
 AC_CONFIG_AUX_DIR([build])
