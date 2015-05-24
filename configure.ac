@@ -52,7 +52,7 @@ AC_DEFUN([BOLO_COLLECTOR],
 				[build_$1_collector=no]))
 		])
 
-	 AM_CONDITIONAL([build_$1_collector], [test "x$build_$1_collector" = "xyes"])
+	 AM_CONDITIONAL([build_$1_collector], [test "x$build_$1_collector" != "xno"])
 	])
 
 
