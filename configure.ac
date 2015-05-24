@@ -44,7 +44,8 @@ AC_ARG_WITH([all-collectors],
 	[build_ALL=auto])
 
 BOLO_COLLECTOR([rrdcache], [auto], [metrics from an RRDtool write-caching daemon],
-	[#include <rrd.h>
+	[#define HAVE_STDINT_H
+	 #include <rrd.h>
 	 #include <rrd_client.h>
 	 int main() { return 0; }
 	], [-lrrd])
