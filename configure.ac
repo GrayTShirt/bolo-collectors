@@ -37,7 +37,7 @@ AC_DEFUN([BOLO_COLLECTOR],
 		 LIBS="$5 $LIBS"
 		 AC_MSG_CHECKING([for `$1` collector prereqs])
 		 AC_CACHE_VAL([bolo_cv_$1_ok],
-			[AC_LINK_IFELSE([$4],
+			[AC_LINK_IFELSE([AC_LANG_SOURCE([$4])],
 			[bolo_cv_$1_ok=yes],
 			[bolo_cv_$1_ok=no])])
 		 AC_MSG_RESULT([$bolo_cv_$1_ok])
