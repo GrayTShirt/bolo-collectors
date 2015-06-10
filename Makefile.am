@@ -3,6 +3,7 @@
 #
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
+ACLOCAL_AMFLAGS  = -I build
 
 EXTRA_DIST  =
 EXTRA_DIST += bootstrap
