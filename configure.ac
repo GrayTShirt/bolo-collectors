@@ -34,8 +34,7 @@ build_ALL=auto
 AC_ARG_WITH([all-collectors],
 	[AS_HELP_STRING([--with-all-collectors],
 		[Build all optional collector programs (--with-X-collector)])],
-	[echo "triggered build_ALL logic"
-	 case "${withval}" in
+	[case "${withval}" in
 	 yes)  build_ALL=yes;  AC_MSG_NOTICE([Will build ALL optional collectors])            ;;
 	 no)   build_ALL=no;   AC_MSG_NOTICE([Will not build any optional collectors])        ;;
 	 auto) build_ALL=auto; AC_MSG_NOTICE([Will attempt to build ALL optional collectors]) ;;
