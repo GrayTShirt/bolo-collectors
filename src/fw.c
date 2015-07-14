@@ -111,8 +111,6 @@ int main(int argc, char **argv)
 
 int parse_options(int argc, char **argv)
 {
-	int errors = 0;
-
 	int i;
 	for (i = 1; i < argc; i++) {
 		if (streq(argv[i], "-p") || streq(argv[i], "--prefix")) {
