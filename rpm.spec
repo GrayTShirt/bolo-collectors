@@ -53,6 +53,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/bolo/collectors/mysql
 %{_libdir}/bolo/collectors/nagwrap
 %{_libdir}/bolo/collectors/process
+%{_libdir}/bolo/collectors/tcp
 
 %changelog
 * Wed Jul 15 2015 James Hunt <james@niftylogic.com> 0.3.0-1
