@@ -255,25 +255,25 @@ int collect_stat(void)
 		if (streq(k, "cpu")) {
 			while (*v && isspace(*v)) v++;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
-			printf("RATE %i %s:cpu:user %s\n", ts, PREFIX, v); v = k;
+			printf("RATE %i %s:cpu:user %s\n", ts, PREFIX, v && *v ? v : "0"); v = k;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
-			printf("RATE %i %s:cpu:nice %s\n", ts, PREFIX, v); v = k;
+			printf("RATE %i %s:cpu:nice %s\n", ts, PREFIX, v && *v ? v : "0"); v = k;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
-			printf("RATE %i %s:cpu:system %s\n", ts, PREFIX, v); v = k;
+			printf("RATE %i %s:cpu:system %s\n", ts, PREFIX, v && *v ? v : "0"); v = k;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
-			printf("RATE %i %s:cpu:idle %s\n", ts, PREFIX, v); v = k;
+			printf("RATE %i %s:cpu:idle %s\n", ts, PREFIX, v && *v ? v : "0"); v = k;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
-			printf("RATE %i %s:cpu:iowait %s\n", ts, PREFIX, v); v = k;
+			printf("RATE %i %s:cpu:iowait %s\n", ts, PREFIX, v && *v ? v : "0"); v = k;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
-			printf("RATE %i %s:cpu:irq %s\n", ts, PREFIX, v); v = k;
+			printf("RATE %i %s:cpu:irq %s\n", ts, PREFIX, v && *v ? v : "0"); v = k;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
-			printf("RATE %i %s:cpu:softirq %s\n", ts, PREFIX, v); v = k;
+			printf("RATE %i %s:cpu:softirq %s\n", ts, PREFIX, v && *v ? v : "0"); v = k;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
-			printf("RATE %i %s:cpu:steal %s\n", ts, PREFIX, v); v = k;
+			printf("RATE %i %s:cpu:steal %s\n", ts, PREFIX, v && *v ? v : "0"); v = k;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
-			printf("RATE %i %s:cpu:guest %s\n", ts, PREFIX, v); v = k;
+			printf("RATE %i %s:cpu:guest %s\n", ts, PREFIX, v && *v ? v : "0"); v = k;
 			k = v; while (*k && !isspace(*k)) k++; *k++ = '\0';
-			printf("RATE %i %s:cpu:guest-nice %s\n", ts, PREFIX, v); v = k;
+			printf("RATE %i %s:cpu:guest-nice %s\n", ts, PREFIX, v && *v ? v : "0"); v = k;
 		}
 	}
 	printf("SAMPLE %i %s:load:cpus %i\n", ts, PREFIX, cpus);
@@ -365,19 +365,19 @@ int collect_openfiles(void)
 	/* used file descriptors */
 	while (*a &&  isspace(*a)) a++; b = a;
 	while (*b && !isspace(*b)) b++; *b++ = '\0';
-	printf("SAMPLE %i %s:openfiles:used %s\n", ts, PREFIX, a);
+	printf("SAMPLE %i %s:openfiles:used %s\n", ts, PREFIX, a && *a ? a : "0");
 
 	a = b;
 	/* free file descriptors */
 	while (*a &&  isspace(*a)) a++; b = a;
 	while (*b && !isspace(*b)) b++; *b++ = '\0';
-	printf("SAMPLE %i %s:openfiles:free %s\n", ts, PREFIX, a);
+	printf("SAMPLE %i %s:openfiles:free %s\n", ts, PREFIX, a && *a ? a : "0");
 
 	a = b;
 	/* max file descriptors */
 	while (*a &&  isspace(*a)) a++; b = a;
 	while (*b && !isspace(*b)) b++; *b++ = '\0';
-	printf("SAMPLE %i %s:openfiles:max %s\n", ts, PREFIX, a);
+	printf("SAMPLE %i %s:openfiles:max %s\n", ts, PREFIX, a && *a ? a : "0");
 
 	return 0;
 }
