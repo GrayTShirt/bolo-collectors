@@ -51,8 +51,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/bolo/collectors/httpd
 %{_libdir}/bolo/collectors/linux
 %{_libdir}/bolo/collectors/mysql
+%{_libdir}/bolo/collectors/nagwrap
 %{_libdir}/bolo/collectors/process
 
 %changelog
+* Wed Jul 15 2015 James Hunt <james@niftylogic.com> 0.3.0-1
+- New release
+
 * Fri May 22 2015 James Hunt <james@niftylogic.com> 0.1.0-1
 - Initial RPM package

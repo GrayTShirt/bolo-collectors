@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use IPC::Open2 qw/open2/;
+use Getopt::Long qw/:config bundling/;
+
+my %OPTIONS = ();
+GetOptions \%OPTIONS, qw/
+	prefix|n=s
+/;
+die "USAGE: nagwrap -n :name:of:check -- /original/nagios/plugin [options]\n"
+	unless $OPTIONS{prefix} and @ARGV;
+
+chomp(my $fqdn = qx(/bin/hostname -f));
+$OPTIONS{prefix} =~ s/^:/$fqdn:/;
+
+my $pid = open2(\*CHILD_OUT, \*CHILD_IN, @ARGV);
+defined $pid or die "open2 failed: $!\n";
+
+close CHILD_IN;
+my $output = <CHILD_OUT>;
+1 while <CHILD_OUT>; # sink
+
+waitpid($pid, 0);
+my $rc = $? >> 8;
+
+$output or exit 1;
+chomp($output);
+
+my ($summary, $perf) = split /\s*\|\s*/, $output;
+if ($perf) {
+	for (split /\s+/, $perf) {
+		next unless m/(.*?)=(\d+(:?\.\d+)?)/;
+		printf "SAMPLE %i %s:%s %s\n", time, $OPTIONS{prefix}, $1, $2;
+	}
+}
+
+my $status = "UNKNOWN";
+$status = "OK"        if $rc == 0;
+$status = "WARNING"   if $rc == 1;
+$status = "CRITICAL"  if $rc == 2;
+printf "STATE %i %s %s %s\n", time, $OPTIONS{prefix}, $status, $summary;
