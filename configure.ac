@@ -62,7 +62,7 @@ BOLO_COLLECTOR([postgres], [auto], [metrics by running PostgreSQL database queri
 BOLO_COLLECTOR([mysql], [auto], [metrics by running MySQL database queries],
 	[#include <mysql.h>
 	 int main() { return 0; }
-	], [-lmysqlclient $(which_mysql_config >/dev/null 2>&1 && mysql_config --cflags)])
+	], [-lmysqlclient $(which mysql_config >/dev/null 2>&1 && mysql_config --cflags)])
 
 BOLO_COLLECTOR([httpd], [auto], [metrics from web server daemons],
 	[#include <curl/curl.h>
