@@ -16,10 +16,11 @@ dist_collectors_SCRIPTS += cogd
 dist_collectors_SCRIPTS += hostinfo
 dist_collectors_SCRIPTS += process
 
-collectors_PROGRAMS = linux files
+collectors_PROGRAMS = linux files tcp
 
 files_SOURCES    = src/files.c src/common.h
 linux_SOURCES    = src/linux.c src/common.h
+tcp_SOURCES      = src/tcp.c   src/common.h
 
 if build_httpd_collector
 collectors_PROGRAMS += httpd

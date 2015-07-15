@@ -41,6 +41,8 @@ The following collectors exist:
                     cogd runs (exec time, parse time, etc.)
   7. **httpd**    - Read scoreboard data from nginx
   8. **rrdcache** - Retrieve statistics from RRDCached
+  9. **tcp**      - Connect to arbitrary TCP ports and record
+                    response times (IPv4 only)
 
 
 [libvigor]:   https://github.com/filefrog/libvigor
