@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Bolo::Collector;
+use Net::SNMP ();
+
+OPTION 'host|H=s',
+        usage => '-H, --host <hostname-or-IP>',
+        required => 1;
+
+OPTION 'community|C=s',
+        required => 1;
+
+START;
+PREFIX OPTION->{host};
+
+my %OID = (
+	sysName           => '.1.3.6.1.2.1.1.5.0',
+	hrSystemNumUsers  => '.1.3.6.1.2.1.25.1.5.0',
+	hrSystemProcesses => '.1.3.6.1.2.1.25.1.6.0',
+);
+
+my $snmp = Net::SNMP->session(
+	-hostname  => OPTION->{host},
+	-version   => 'snmpv2c',
+	-community => OPTION->{community},
+) or die "SNMP connection failed: $!.";
+
+my $r = $snmp->get_request(-varbindlist => [values %OID]);
+exit 1 unless defined $r;
+
+$r->{$OID{sysName}} = lc($r->{$OID{sysName}});
+KEY 'snmp.sysName', $r->{$OID{sysName}};
+PREFIX $r->{$OID{sysName}};
+
+SAMPLE 'snmp.sys.users',     $r->{$OID{hrSystemNumUsers}};
+SAMPLE 'snmp.sys.processes', $r->{$OID{hrSystemProcesses}};

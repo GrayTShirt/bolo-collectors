@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Bolo::Collector;
+use Net::SNMP ();
+
+OPTION 'host|H=s',
+        usage => '-H, --host <hostname-or-IP>',
+        required => 1;
+
+OPTION 'community|C=s',
+        required => 1;
+
+START;
+PREFIX OPTION->{host};
+
+my %OID = (
+	sysName           => '.1.3.6.1.2.1.1.5.0',
+	cpmCPUTotal5sec   => '.1.3.6.1.4.1.9.9.109.1.1.1.1.3.1',
+	cpmCPUTotal1min   => '.1.3.6.1.4.1.9.9.109.1.1.1.1.4.1',
+	cpmCPUTotal5min   => '.1.3.6.1.4.1.9.9.109.1.1.1.1.5.1',
+
+	ciscoMemoryPoolUsed => '.1.3.6.1.4.1.9.9.48.1.1.1.5.1',
+	ciscoMemoryPoolFree => '.1.3.6.1.4.1.9.9.48.1.1.1.6.1',
+);
+
+my $snmp = Net::SNMP->session(
+	-hostname  => OPTION->{host},
+	-version   => 'snmpv2c',
+	-community => OPTION->{community},
+) or die "SNMP connection failed: $!.";
+
+my $r = $snmp->get_request(-varbindlist => [values %OID]);
+exit 1 unless defined $r;
+
+$r->{$OID{sysName}} = lc($r->{$OID{sysName}});
+KEY 'snmp.sysName', $r->{$OID{sysName}};
+PREFIX $r->{$OID{sysName}};
+SAMPLE 'snmp.cisco.cpu:5s', $r->{$OID{cpmCPUTotal5sec}};
+SAMPLE 'snmp.cisco.cpu:1m', $r->{$OID{cpmCPUTotal1min}};
+SAMPLE 'snmp.cisco.cpu:5m', $r->{$OID{cpmCPUTotal5min}};
+SAMPLE 'snmp.cisco.mem:used', $r->{$OID{ciscoMemoryPoolUsed}};
+SAMPLE 'snmp.cisco.mem:free', $r->{$OID{ciscoMemoryPoolFree}};

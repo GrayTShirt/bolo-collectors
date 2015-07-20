@@ -1,0 +1,125 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Bolo::Collector;
+use Net::SNMP ();
+
+OPTION 'host|H=s',
+        usage => '-H, --host <hostname-or-IP>',
+        required => 1;
+
+OPTION 'community|C=s',
+        required => 1;
+
+START;
+PREFIX OPTION->{host};
+
+my $ifEntry  = '.1.3.6.1.2.1.2.2.1';
+my $ifXEntry = '.1.3.6.1.2.1.31.1.1.1';
+my %OID = (
+	sysName       => '.1.3.6.1.2.1.1.5.0',
+
+	ifIndex         => "$ifEntry.1",
+	ifDescr         => "$ifEntry.2",
+	#ifType 3
+	#ifMtu  4
+	ifSpeed         => "$ifEntry.5",
+	ifPhysAddress   => "$ifEntry.6",
+	ifAdminStatus   => "$ifEntry.7",
+	ifOperStatus    => "$ifEntry.8",
+	# ifLastChange 9
+	ifInOctets      => "$ifEntry.10",
+	ifInUcastPkts   => "$ifEntry.11",
+	ifInNUcastPktys => "$ifEntry.12",
+	ifInDiscards    => "$ifEntry.13",
+	ifInErrors      => "$ifEntry.14",
+	#ifInUnknownProtos 15
+	ifOutOctets     => "$ifEntry.16",
+	ifOutUcastPkts  => "$ifEntry.17",
+	ifOutNUcastPkts => "$ifEntry.18",
+	ifOutDiscards   => "$ifEntry.19",
+	ifOutErrors     => "$ifEntry.20",
+	ifOutQLen       => "$ifEntry.21",
+	#ifSpecific 22
+
+	ifName               => "$ifXEntry.1",
+	ifInMulticastPkts    => "$ifXEntry.2",
+	ifInBroadcastPkts    => "$ifXEntry.3",
+	ifOutMulticastPkts   => "$ifXEntry.4",
+	ifOutBroadcastPkts   => "$ifXEntry.5",
+	ifHCInOctets         => "$ifXEntry.6",
+	ifHCInUcastPkts      => "$ifXEntry.7",
+	ifHCInMulticastPkts  => "$ifXEntry.8",
+	ifHCInBroadcastPkts  => "$ifXEntry.9",
+	ifHCOutOctets        => "$ifXEntry.10",
+	ifHCOutUcastPkts     => "$ifXEntry.11",
+	ifHCOutMulticastPkts => "$ifXEntry.12",
+	ifHCOutBroadcastPkts => "$ifXEntry.13",
+	# ifLinkUpDownTrapEnable 14
+	ifHighSpeed          => "$ifXEntry.15",
+	# ifPromiscuousMode 16
+	# ifConnectorPresent 17
+	# ifAlias 18
+	# ifCounterDiscontinuityTime 19
+);
+
+my $snmp = Net::SNMP->session(
+	-hostname  => OPTION->{host},
+	-version   => 'snmpv2c',
+	-community => OPTION->{community},
+) or die "SNMP connection failed: $!.";
+
+my $r = $snmp->get_request(-varbindlist => [$OID{sysName}]);
+exit 1 unless defined $r;
+
+$r->{$OID{sysName}} = lc($r->{$OID{sysName}});
+KEY 'snmp.sysName', $r->{$OID{sysName}};
+PREFIX $r->{$OID{sysName}};
+
+my $ifTable  = $snmp->get_table(-baseoid => $ifEntry);
+my $ifXTable = $snmp->get_table(-baseoid => $ifXEntry);
+my $idx = $snmp->get_table(-baseoid => $OID{ifIndex});
+for my $i (sort values %$idx) {
+	my $ifname = $ifXTable->{"$OID{ifName}.$i"};
+
+	my $oper  = $ifTable->{"$OID{ifOperStatus}.$i"};
+	my $admin = $ifTable->{"$OID{ifAdminStatus}.$i"};
+
+	KEY "snmp.iface.status.oper:$ifname",  $oper;
+	KEY "snmp.iface.status.admin:$ifname", $admin;
+
+	RATE "snmp.iface:octets.in:$ifname",    $ifXTable->{"$OID{ifHCInOctets}.$i"};
+	RATE "snmp.iface:octets.out:$ifname",   $ifXTable->{"$OID{ifHCOutOctets}.$i"};
+	RATE "snmp.iface:errors.in:$ifname",    $ifTable->{"$OID{ifInErrors}.$i"};
+	RATE "snmp.iface:errors.out:$ifname",   $ifTable->{"$OID{ifOutErrors}.$i"};
+	RATE "snmp.iface:discards.in:$ifname",  $ifTable->{"$OID{ifInDiscards}.$i"};
+	RATE "snmp.iface:discards.out:$ifname", $ifTable->{"$OID{ifOutDiscards}.$i"};
+
+	my $status = "UNKNOWN";
+	my $message = "$ifname is oper($oper) / admin($admin)";
+
+	if ($oper !~ m/^\d+$/ or $admin !~ m/^\d+$/) {
+		UNKNOWN "snmp.iface:$ifname" => "%s is oper(%s) / admin(%s)",
+		        $ifname, $oper, $admin;
+
+	} elsif ($admin == 3) {
+		OK "snmp.iface:$ifname" => "%s is configured for TEST mode", $ifname;
+
+	} elsif ($oper == 3) {
+		WARNING "snmp.iface:$ifname" => "%s is in TEST mode", $ifname;
+
+	} elsif ($oper == $admin) {
+		OK "snmp.iface:$ifname" => "No operational / administrative issues with %s interface status", $ifname;
+
+	} elsif ($oper == 2 and $admin == 1) {
+		CRITICAL "snmp.iface:$ifname" => "%s is DOWN, but is configured to be up", $ifname;
+
+	} elsif ($oper == 1 and $admin == 2) {
+		WARNING "snmp.iface:$ifname" => "%s is UP, but is configured to be down", $ifname;
+
+	} else {
+		UNKNOWN "snmp.iface:$ifname" => "%s is oper(%s) / admin(%s)",
+		        $ifname, $oper, $admin;
+	}
+}
