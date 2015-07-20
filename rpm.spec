@@ -53,9 +53,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/bolo/collectors/mysql
 %{_libdir}/bolo/collectors/nagwrap
 %{_libdir}/bolo/collectors/process
+%{_libdir}/bolo/collectors/snmp_cisco
+%{_libdir}/bolo/collectors/snmp_ifaces
+%{_libdir}/bolo/collectors/snmp_system
 %{_libdir}/bolo/collectors/tcp
 
 %changelog
+* Mon Jul 20 2015 James Hunt <james@niftylogic.com> 0.4.1-1
+- New release
+
 * Mon Jul 20 2015 James Hunt <james@niftylogic.com> 0.4.0-1
 - New release
 
