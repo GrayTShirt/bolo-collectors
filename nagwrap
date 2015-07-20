@@ -5,6 +5,7 @@ use warnings;
 use IPC::Open2 qw/open2/;
 use Getopt::Long qw/:config bundling/;
 
+$0 = "[nagwrap]";
 my %OPTIONS = ();
 GetOptions \%OPTIONS, qw/
 	prefix|n=s
