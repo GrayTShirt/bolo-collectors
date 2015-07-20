@@ -1,5 +1,5 @@
 Name:           bolo-collectors
-Version:        0.3.0
+Version:        0.4.0
 Release:        1%{?dist}
 Summary:        Monitoring System Collectors
 
@@ -30,7 +30,7 @@ This package provides collectors for system metrics.
 
 
 %build
-%configure --with-all-collectors
+%configure --with-all-collectors --prefix=/usr PERLDIR=/usr/share/perl5
 make %{?_smp_mflags}
 
 
@@ -56,6 +56,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/bolo/collectors/tcp
 
 %changelog
+* Mon Jul 20 2015 James Hunt <james@niftylogic.com> 0.4.0-1
+- New release
+
 * Wed Jul 15 2015 James Hunt <james@niftylogic.com> 0.3.0-1
 - New release
 

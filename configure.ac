@@ -18,7 +18,7 @@
 #
 
 AC_PREREQ(2.63)
-AC_INIT([bolo-collectors], [0.3.0], [bugs@niftylogic.com])
+AC_INIT([bolo-collectors], [0.4.0], [bugs@niftylogic.com])
 
 AC_CONFIG_SRCDIR([src/linux.c])
 AC_CONFIG_AUX_DIR([build])
@@ -69,6 +69,11 @@ BOLO_COLLECTOR([httpd], [auto], [metrics from web server daemons],
 	 int main() { return 0; }
 	], [-lcurl])
 
+AC_ARG_VAR([PERLDIR], [Where to install Perl modules])
+if test -z "$PERLDIR"; then
+	#PERLDIR=/usr/share/perl5
+	PERLDIR='${datadir}/${PACKAGE}/perl'
+fi
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

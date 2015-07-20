@@ -7,6 +7,7 @@ ACLOCAL_AMFLAGS  = -I build
 
 EXTRA_DIST  =
 EXTRA_DIST += bootstrap
+EXTRA_DIST += lib/Bolo/Collector.pm
 
 LDADD = -lvigor
 
@@ -16,6 +17,9 @@ dist_collectors_SCRIPTS += cogd
 dist_collectors_SCRIPTS += hostinfo
 dist_collectors_SCRIPTS += nagwrap
 dist_collectors_SCRIPTS += process
+dist_collectors_SCRIPTS += snmp_cisco
+dist_collectors_SCRIPTS += snmp_ifaces
+dist_collectors_SCRIPTS += snmp_system
 
 collectors_PROGRAMS = linux files tcp
 
@@ -53,6 +57,16 @@ collectors_PROGRAMS += mysql
 mysql_SOURCES    = src/mysql.c src/common.h
 mysql_LDADD      = -ldl
 endif
+
+############################################################
+
+install-exec-local:
+	$(mkinstalldirs) $(DESTDIR)$(PERLDIR)/Bolo
+	$(INSTALL_DATA) lib/Bolo/Collector.pm $(DESTDIR)$(PERLDIR)/Bolo/Collector.pm
+
+uninstall-local:
+	$(RM) -f $(DESTDIR)$(PERLDIR)/Bolo/Collector.pm
+	$(RMDIR) $(DESTDIR)$(PERLDIR)/Bolo
 
 ############################################################
 
