@@ -1,5 +1,5 @@
 Name:           bolo-collectors
-Version:        0.4.0
+Version:        0.4.3
 Release:        1%{?dist}
 Summary:        Monitoring System Collectors
 
@@ -59,6 +59,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/bolo/collectors/tcp
 
 %changelog
+* Tue Jul 21 2015 James Hunt <james@niftylogic.com> 0.4.3-1
+- New release
+
 * Mon Jul 20 2015 James Hunt <james@niftylogic.com> 0.4.1-1
 - New release
 
