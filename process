@@ -169,7 +169,8 @@ sub pidstats
 	my $smaps = smaps($ENV{TEST_PROC_SMAPS} || "/proc/$pid/smaps");
 	for (qw(heap anon stack libs mmap)) {
 		my $h;
-		$data->{"mem_$_"}  = 0;
+		$data->{"mem_$_"} = 0;
+		$data->{"swp_$_"} = 0;
 		if ($h = $smaps->{"[$_]"}{usage}) {
 			$data->{"mem_$_"} += $h->{private_clean} + $h->{private_dirty};
 			$data->{"mem_$_"} += $h->{shared_clean}  + $h->{shared_dirty}
