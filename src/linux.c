@@ -530,6 +530,9 @@ int collect_netdev(void)
 	} tx = {0xff}, rx = {0xff};
 
 	while (fgets(buf, 8192, io) != NULL) {
+		char *x = strrchr(buf, ':');
+		if (x) *x = ' ';
+
 		char name[32];
 		int rc = sscanf(buf, " %31s "
 			"%lu %lu %lu %lu %lu %lu %lu %lu "
@@ -542,9 +545,6 @@ int collect_netdev(void)
 
 		if (rc < 17)
 			continue;
-
-		char *x = strrchr(name, ':');
-		if (x) *x = '\0';
 
 		printf("RATE %i %s:net:%s:rx.bytes %lu\n",      ts, PREFIX, name, rx.bytes);
 		printf("RATE %i %s:net:%s:rx.packets %lu\n",    ts, PREFIX, name, rx.packets);
