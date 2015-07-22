@@ -115,7 +115,7 @@ void* worker_thread(void *u)
 		fprintf(stderr, "Failed to connect to %s:%i: %s (%i)\n",
 				OPTIONS.host, ntohs(sa->sin_port), strerror(errno), errno);
 	} else {
-		printf("SAMPLE %i %s:tcp:%i %0.3lf\n", time_s(), PREFIX, ntohs(sa->sin_port), ms / 1000.0);
+		printf("SAMPLE %i %s:tcp:%i %0.3lf\n", ts, PREFIX, ntohs(sa->sin_port), ms / 1000.0);
 	}
 	close(fd);
 
@@ -177,6 +177,7 @@ int parse_options(int argc, char **argv)
 	}
 	if (!PREFIX) PREFIX = fqdn();
 	if (!OPTIONS.host) OPTIONS.host = fqdn();
+	ts = time_s();
 	OPTIONS.ports  = argv + i;
 	OPTIONS.nports = argc - i;
 	return argv[i] == NULL ? 1 : 0;

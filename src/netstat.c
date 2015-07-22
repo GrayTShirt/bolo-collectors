@@ -143,6 +143,7 @@ int parse_options(int argc, char **argv)
 		errors++;
 	}
 	if (!PREFIX) PREFIX = fqdn();
+	ts = time_s();
 
 	if (nflagged == 0) {
 		if (!masked("ipv4"))  RUN("ipv4");
