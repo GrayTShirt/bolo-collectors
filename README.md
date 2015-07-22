@@ -34,6 +34,8 @@ The following collectors exist:
   3. **process**  - Gather data about a set of processes
   4. **postgres** - Run arbitrary queries against a PG database
   4. **mysql**    - Run arbitrary queryes against a MySQL database
+  4. **netstat**  - Get network recv/send queue sizes for
+                    arbitrary in-flight and listening connections.
   5. **files**    - Count files according to age, time, name, etc.
   6. **fw**       - Get hit counters (packets/bytes) from iptables
                     firewalls

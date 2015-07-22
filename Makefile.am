@@ -21,12 +21,13 @@ dist_collectors_SCRIPTS += snmp_cisco
 dist_collectors_SCRIPTS += snmp_ifaces
 dist_collectors_SCRIPTS += snmp_system
 
-collectors_PROGRAMS = linux files tcp
+collectors_PROGRAMS = linux files tcp netstat
 
 files_SOURCES    = src/files.c src/common.h
 linux_SOURCES    = src/linux.c src/common.h
 tcp_SOURCES      = src/tcp.c   src/common.h
 tcp_LDADD        = -lpthread
+netstat_SOURCES  = src/netstat.c   src/common.h
 
 if build_httpd_collector
 collectors_PROGRAMS += httpd

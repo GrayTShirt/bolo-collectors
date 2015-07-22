@@ -1,5 +1,5 @@
 Name:           bolo-collectors
-Version:        0.4.4
+Version:        0.4.5
 Release:        1%{?dist}
 Summary:        Monitoring System Collectors
 
@@ -52,6 +52,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/bolo/collectors/linux
 %{_libdir}/bolo/collectors/mysql
 %{_libdir}/bolo/collectors/nagwrap
+%{_libdir}/bolo/collectors/netstat
 %{_libdir}/bolo/collectors/process
 %{_libdir}/bolo/collectors/snmp_cisco
 %{_libdir}/bolo/collectors/snmp_ifaces
@@ -59,6 +60,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/bolo/collectors/tcp
 
 %changelog
+* Tue Jul 22 2015 James Hunt <james@niftylogic.com> 0.4.5-1
+- New release
+
 * Tue Jul 21 2015 James Hunt <james@niftylogic.com> 0.4.4-1
 - New release
 

@@ -26,6 +26,7 @@ rrdcache
 tcp
 postgres
 mysql
+netstat
 
 bolo-collectors-*.tar.gz
 
