@@ -11,6 +11,10 @@ EXTRA_DIST += lib/Bolo/Collector.pm
 
 LDADD = -lvigor
 
+bin_PROGRAMS = rrdq
+rrdq_SOURCES = src/rrdq.c
+rrdq_LDADD   = -lrrd
+
 collectorsdir=$(libdir)/bolo/collectors
 dist_collectors_SCRIPTS  =
 dist_collectors_SCRIPTS += cogd

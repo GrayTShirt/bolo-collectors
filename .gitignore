@@ -18,6 +18,8 @@ build/*
 *.o
 .*.sw*
 
+rrdq
+
 linux
 httpd
 files
