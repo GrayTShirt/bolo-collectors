@@ -92,9 +92,10 @@ int parse_options(int argc, char **argv)
 			exit(0);
 		}
 
+		int good = 0;
 		#define KEYWORD(k,n) do { \
-			if (streq(argv[i],      k)) {  RUN(n); nflagged++; continue; } \
-			if (streq(argv[i], "no" k)) { SKIP(n);             continue; } \
+			if (streq(argv[i],      k)) {  RUN(n); nflagged++; good = 1; continue; } \
+			if (streq(argv[i], "no" k)) { SKIP(n);             good = 1; continue; } \
 		} while (0)
 
 		KEYWORD("mem",       "meminfo");
@@ -108,6 +109,7 @@ int parse_options(int argc, char **argv)
 		KEYWORD("net",       "netdev");
 
 		#undef KEYWORD
+		if (good) continue;
 
 		fprintf(stderr, "Unrecognized argument '%s'\n", argv[i]);
 		errors++;
