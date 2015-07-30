@@ -13,7 +13,7 @@ LDADD = -lvigor
 
 bin_PROGRAMS = rrdq
 rrdq_SOURCES = src/rrdq.c
-rrdq_LDADD   = -lrrd
+rrdq_LDADD   = -lrrd -lm
 
 collectorsdir=$(libdir)/bolo/collectors
 dist_collectors_SCRIPTS  =

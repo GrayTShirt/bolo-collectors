@@ -30,6 +30,10 @@ AC_PROG_CC
 
 AC_HAVE_LIBRARY(vigor,,    AC_MSG_ERROR(Missing libvigor - see http://github.com/filefrog/libvigor))
 
+AC_HAVE_LIBRARY(m,,    AC_MSG_ERROR(Missing libm - see https://sourceware.org/glibc/wiki/libm))
+AC_CHECK_LIB([m],[sqrt])
+AC_CHECK_LIB([m],[floor])
+
 build_ALL=auto
 AC_ARG_WITH([all-collectors],
 	[AS_HELP_STRING([--with-all-collectors],
