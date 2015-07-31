@@ -9,11 +9,11 @@ EXTRA_DIST  =
 EXTRA_DIST += bootstrap
 EXTRA_DIST += lib/Bolo/Collector.pm
 
-LDADD = -lvigor
+LDADD = $(VIGOR_LIBS)
 
 bin_PROGRAMS = rrdq
 rrdq_SOURCES = src/rrdq.c
-rrdq_LDADD   = -lrrd -lm
+rrdq_LDADD   = -lrrd $(RRDQ_LIBS)
 
 collectorsdir=$(libdir)/bolo/collectors
 dist_collectors_SCRIPTS  =
@@ -30,37 +30,37 @@ collectors_PROGRAMS = linux files tcp netstat
 files_SOURCES    = src/files.c src/common.h
 linux_SOURCES    = src/linux.c src/common.h
 tcp_SOURCES      = src/tcp.c   src/common.h
-tcp_LDADD        = -lpthread
+tcp_LDADD        = -lpthread $(VIGOR_LIBS)
 netstat_SOURCES  = src/netstat.c   src/common.h
 
 if build_httpd_collector
 collectors_PROGRAMS += httpd
 httpd_SOURCES    = src/httpd.c src/common.h
-httpd_LDADD      = -lcurl
+httpd_LDADD      = -lcurl $(VIGOR_LIBS)
 endif
 
 if build_fw_collector
 collectors_PROGRAMS += fw
 fw_SOURCES       = src/fw.c src/common.h
-fw_LDADD         = -lip4tc -lip6tc
+fw_LDADD         = -lip4tc -lip6tc $(VIGOR_LIBS)
 endif
 
 if build_rrdcache_collector
 collectors_PROGRAMS += rrdcache
 rrdcache_SOURCES = src/rrdcache.c src/common.h
-rrdcache_LDADD   = -lrrd
+rrdcache_LDADD   = -lrrd $(VIGOR_LIBS)
 endif
 
 if build_postgres_collector
 collectors_PROGRAMS += postgres
 postgres_SOURCES = src/postgres.c src/common.h
-postgres_LDADD   = -lpq
+postgres_LDADD   = -lpq $(VIGOR_LIBS)
 endif
 
 if build_mysql_collector
 collectors_PROGRAMS += mysql
 mysql_SOURCES    = src/mysql.c src/common.h
-mysql_LDADD      = -ldl
+mysql_LDADD      = -ldl $(VIGOR_LIBS)
 endif
 
 ############################################################
