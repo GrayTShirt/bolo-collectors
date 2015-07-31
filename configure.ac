@@ -28,11 +28,17 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
 AC_PROG_CC
 
+SAVE_LIBS=$LIBS
 AC_HAVE_LIBRARY(vigor,,    AC_MSG_ERROR(Missing libvigor - see http://github.com/filefrog/libvigor))
-
-AC_HAVE_LIBRARY(m,,    AC_MSG_ERROR(Missing libm - see https://sourceware.org/glibc/wiki/libm))
-AC_CHECK_LIB([m],[sqrt])
-AC_CHECK_LIB([m],[floor])
+VIGOR_LIBS=$LIBS
+LIBS=
+AC_SEARCH_LIBS([cos,floor,sqrt], [m], [], [
+	AC_MSG_ERROR([unable to find the cos(), floor(), and sqrt() functions])
+])
+RRDQ_LIBS=$LIBS
+LIBS=$SAVE_LIBS
+AC_SUBST(VIGOR_LIBS)
+AC_SUBST(RRDQ_LIBS)
 
 build_ALL=auto
 AC_ARG_WITH([all-collectors],
