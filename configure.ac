@@ -40,6 +40,10 @@ LIBS=$SAVE_LIBS
 AC_SUBST(VIGOR_LIBS)
 AC_SUBST(RRDQ_LIBS)
 
+BOLO_WITH([postgres], [the PostgreSQL libraries (libpq) and headers])
+BOLO_WITH([mysql],    [the MySQL libraries (libmysqlclient) and headers])
+BOLO_WITH([rrd],      [the RRD libraries (librrd) and headers])
+
 build_ALL=auto
 AC_ARG_WITH([all-collectors],
 	[AS_HELP_STRING([--with-all-collectors],
@@ -65,7 +69,7 @@ BOLO_COLLECTOR([fw], [auto], [metrics from a host-based IP firewall],
 	], [-lip4tc -lip6tc])
 
 BOLO_COLLECTOR([postgres], [auto], [metrics by running PostgreSQL database queries],
-	[#include <postgresql/libpq-fe.h>
+	[#include <libpq-fe.h>
 	 int main() { return 0; }
 	], [-lpq])
 

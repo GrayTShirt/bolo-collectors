@@ -1,5 +1,5 @@
 #include "common.h"
-#include <postgresql/libpq-fe.h>
+#include <libpq-fe.h>
 
 static int column(PGresult *r, const char *name) {
 	int c = PQfnumber(r, name);

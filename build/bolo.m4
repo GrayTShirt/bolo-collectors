@@ -70,3 +70,27 @@ AC_DEFUN([BOLO_COLLECTOR],
 
 	 AM_CONDITIONAL([build_$1_collector], [test "x$build_$1_collector" != "xno"])
 	])
+
+dnl =============================================================
+dnl BOLO_WITH(name, description)
+dnl
+dnl Sets up --with-X and --without-X arguments to ./configure, and
+dnl the necessary handler code to update both CFLAGS and LDFLAGS,
+dnl based on arguments and on-disk directories.
+dnl
+dnl The basic principle is this: if the caller gives us a path
+dnl to one of these --with-X arguments, we look for library (lib/)
+dnl and header file (include/) directories under the path, and adjust
+dnl LDFLAGS and CFLAGS accordingly with new -L and -I flags.
+dnl
+dnl =============================================================
+AC_DEFUN([BOLO_WITH],
+	# Set up CFLAGS and LDFLAGS using the --with-X=<path> idiom
+	[AC_ARG_WITH([$1],
+		[AS_HELP_STRING([--with-$1],[Where to find $2])],
+		[if test $withval != "yes" -a $withval != "no"; then
+			prefix=${withval%%/}
+			if test -d "$prefix/lib/";     then LDFLAGS="$LDFLAGS -L$prefix/lib";   fi
+			if test -d "$prefix/include/"; then CFLAGS="$CFLAGS -I$prefix/include"; fi
+		fi],[])
+	])
