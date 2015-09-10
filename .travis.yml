@@ -1,0 +1,12 @@
+# travis ci
+
+language: c
+
+os:
+  - linux
+
+addons:
+  apt:
+    packages:
+      - librrd-dev
+script: ./ci build
