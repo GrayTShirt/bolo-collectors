@@ -23,6 +23,12 @@ OPTION 'ifname|n=s',
 OPTION 'ifdesc|d=s',
         usage => '-d, --ifdesc <regex for descriptions>';
 
+OPTION 'ifaddr|i=s@',
+        usage => '-i, --ifaddr <ip addres>';
+
+OPTION 'iaddronly|I',
+        usage => '-I, --iaddronly';
+
 OPTION 'output|o=s',
         usage => '-o, --output <filepath-for-output>';
 
@@ -42,9 +48,9 @@ my $snmp = Net::SNMP->session(
 	-community => OPTION->{community},
 ) or die "SNMP connection failed: $!.";
 
-
 my $ifEntry  = '.1.3.6.1.2.1.2.2.1';
 my $ifXEntry = '.1.3.6.1.2.1.31.1.1.1';
+my $ifAddr   = '.1.3.6.1.2.1.4.20.1.2';
 my %OID = (
 	sysName  => '.1.3.6.1.2.1.1.5.0',
 	cpuIndex => '.1.3.6.1.4.1.9.9.109.1.1.1.1.2',
@@ -56,13 +62,16 @@ my %OID = (
 
 my $OUT = {};
 if (-f OPTION->{output}) {
-	my $OUT = LoadFile(OPTION->{output})
+	$OUT = LoadFile(OPTION->{output})
 		or die "unable to load: ".OPTION->{output}.", $!";
 }
 
 my $r = $snmp->get_request(-varbindlist => [$OID{sysName}]);
-exit 1 unless defined $r;
+BAIL CRITICAL => "Snmp error: ".$snmp->error if $snmp->error_status or ! defined $r;
+
 my $sysname = lc $r->{$OID{sysName}};
+DEBUG "working on $sysname";
+
 $r = $snmp->get_table(-baseoid => $OID{cpuIndex});
 $OUT->{$sysname}{cpus} = [sort values %$r];
 $OUT->{$sysname}{ifaces} = [];
@@ -70,14 +79,23 @@ $OUT->{$sysname}{ifaces} = [];
 $r = $snmp->get_table(-baseoid => $ifEntry);
 my $re = $snmp->get_table(-baseoid => $ifXEntry);
 my $idx = $snmp->get_table(-baseoid => $OID{ifIndex});
-for my $idx (sort values %$idx) {
-	next unless
-		     $r->{"$OID{ifDescr}.$idx"} =~ $desc_r
-		and $re->{"$OID{ifAlias}.$idx"} =~ $alias_r
-		and $re->{"$OID{ifName}.$idx"}  =~ $name_r;
-	push @{$OUT->{$sysname}{ifaces}}, $idx;
+my $addrs = $snmp->get_table(-baseoid => $ifAddr);
+if (!OPTION->{iaddronly}) {
+	for my $idx (sort values %$idx) {
+		next unless
+			     $r->{"$OID{ifDescr}.$idx"} =~ $desc_r
+			and $re->{"$OID{ifAlias}.$idx"} =~ $alias_r
+			and $re->{"$OID{ifName}.$idx"}  =~ $name_r;
+		push @{$OUT->{$sysname}{ifaces}}, $idx;
+	}
 }
-
+for my $addr (sort keys %$addrs) {
+	for (@{OPTION->{ifaddr}}) {
+		push @{$OUT->{$sysname}{ifaces}}, $addrs->{$addr}
+			if $addr =~ m/$_$/;
+	}
+}
+DUMP $OUT;
 $snmp->close;
 open my $fh, '>', OPTION->{output} or die "unable to open ".OPTION->{output}." for writing: $!";
 print $fh Dump($OUT);
