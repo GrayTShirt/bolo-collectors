@@ -15,8 +15,8 @@ bin_PROGRAMS = rrdq
 rrdq_SOURCES = src/rrdq.c
 rrdq_LDADD   = -lrrd $(RRDQ_LIBS)
 
-sharedir = $(prefix)/share/@PACKAGE@
-share_DATA = share/pg.sql
+share_dir        = $(pkgdatadir)
+dist_share__DATA = share/pg.sql
 
 collectorsdir=$(libdir)/bolo/collectors
 dist_collectors_SCRIPTS  =

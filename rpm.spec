@@ -1,5 +1,5 @@
 Name:           bolo-collectors
-Version:        0.4.7
+Version:        0.4.8
 Release:        1%{?dist}
 Summary:        Monitoring System Collectors
 
@@ -46,15 +46,20 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %{_bindir}/rrdq
+%{_datadir}/bolo-collectors/pg.sql
+%{_datadir}/perl5
 %{_libdir}/bolo/collectors/cogd
 %{_libdir}/bolo/collectors/files
+%{_libdir}/bolo/collectors/fw
 %{_libdir}/bolo/collectors/hostinfo
 %{_libdir}/bolo/collectors/httpd
 %{_libdir}/bolo/collectors/linux
 %{_libdir}/bolo/collectors/mysql
 %{_libdir}/bolo/collectors/nagwrap
 %{_libdir}/bolo/collectors/netstat
+%{_libdir}/bolo/collectors/postgres
 %{_libdir}/bolo/collectors/process
+%{_libdir}/bolo/collectors/rrdcache
 %{_libdir}/bolo/collectors/snmp_cisco
 %{_libdir}/bolo/collectors/snmp_cisco_detect
 %{_libdir}/bolo/collectors/snmp_cisco_sys
