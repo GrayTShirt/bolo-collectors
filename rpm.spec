@@ -56,6 +56,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/bolo/collectors/netstat
 %{_libdir}/bolo/collectors/process
 %{_libdir}/bolo/collectors/snmp_cisco
+%{_libdir}/bolo/collectors/snmp_cisco_detect
+%{_libdir}/bolo/collectors/snmp_cisco_sys
+%{_libdir}/bolo/collectors/snmp_cisco_ifaces
 %{_libdir}/bolo/collectors/snmp_ifaces
 %{_libdir}/bolo/collectors/snmp_system
 %{_libdir}/bolo/collectors/tcp

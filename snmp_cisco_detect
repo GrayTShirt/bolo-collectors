@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Bolo::Collector;
+use YAML::XS qw/LoadFile Dump/;
+use Net::SNMP ();
+
+OPTION 'host|H=s',
+        usage => '-H, --host <hostname-or-IP>',
+        required => 1;
+
+OPTION 'community|C=s',
+        required => 1;
+
+OPTION 'ifalias|a=s',
+        usage => '-a, --ifalias <regex for aliases>';
+
+OPTION 'ifname|n=s',
+        usage => '-n, --ifname <regex for names>';
+
+OPTION 'ifdesc|d=s',
+        usage => '-d, --ifdesc <regex for descriptions>';
+
+OPTION 'output|o=s',
+        usage => '-o, --output <filepath-for-output>';
+
+START;
+
+my $desc  = OPTION->{ifdesc} ? OPTION->{ifdesc} : ".";
+my $alias = OPTION->{ifalias} ? OPTION->{ifalias} : ".";
+my $name  = OPTION->{ifname} ? OPTION->{ifname} : ".";
+
+my $desc_r  = qr/$desc/;
+my $alias_r = qr/$alias/;
+my $name_r  = qr/$name/;
+
+my $snmp = Net::SNMP->session(
+	-hostname  => OPTION->{host},
+	-version   => 'snmpv2c',
+	-community => OPTION->{community},
+) or die "SNMP connection failed: $!.";
+
+
+my $ifEntry  = '.1.3.6.1.2.1.2.2.1';
+my $ifXEntry = '.1.3.6.1.2.1.31.1.1.1';
+my %OID = (
+	sysName  => '.1.3.6.1.2.1.1.5.0',
+	cpuIndex => '.1.3.6.1.4.1.9.9.109.1.1.1.1.2',
+	ifIndex  => "$ifEntry.1",
+	ifDescr  => "$ifEntry.2",
+	ifName   => "$ifXEntry.1",
+	ifAlias  => "$ifXEntry.18",
+);
+
+my $OUT = {};
+if (-f OPTION->{output}) {
+	my $OUT = LoadFile(OPTION->{output})
+		or die "unable to load: ".OPTION->{output}.", $!";
+}
+
+my $r = $snmp->get_request(-varbindlist => [$OID{sysName}]);
+exit 1 unless defined $r;
+my $sysname = lc $r->{$OID{sysName}};
+$r = $snmp->get_table(-baseoid => $OID{cpuIndex});
+$OUT->{$sysname}{cpus} = [sort values %$r];
+$OUT->{$sysname}{ifaces} = [];
+
+$r = $snmp->get_table(-baseoid => $ifEntry);
+my $re = $snmp->get_table(-baseoid => $ifXEntry);
+my $idx = $snmp->get_table(-baseoid => $OID{ifIndex});
+for my $idx (sort values %$idx) {
+	next unless
+		     $r->{"$OID{ifDescr}.$idx"} =~ $desc_r
+		and $re->{"$OID{ifAlias}.$idx"} =~ $alias_r
+		and $re->{"$OID{ifName}.$idx"}  =~ $name_r;
+	push @{$OUT->{$sysname}{ifaces}}, $idx;
+}
+
+$snmp->close;
+open my $fh, '>', OPTION->{output} or die "unable to open ".OPTION->{output}." for writing: $!";
+print $fh Dump($OUT);
+close $fh;
