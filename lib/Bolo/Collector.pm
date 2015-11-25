@@ -253,13 +253,13 @@ sub TRACK
 sub _inflate
 {
 	my ($range) = @_;
-	if ($range =~ m/([0-9]+(?:\.[0-9]+)):([0-9]+(?:\.[0-9]+))/) {
+	if ($range =~ m/(\d+(?:\.\d+)):(\d+(?:\.\d+))/) {
 		return { low => $1, high => $2 };
-	} elsif ($range =~ m/([0-9]+(?:\.[0-9]+)):/) {
+	} elsif ($range =~ m/(\d+(?:\.\d+)):/) {
 		return { low => $1, high => undef };
-	} elsif ($range =~ m/:([0-9]+(?:\.[0-9]+))/) {
+	} elsif ($range =~ m/:(\d+(?:\.\d+))/) {
 		return { low => undef, high => $1 };
-	} elsif ($range =~ m/([0-9]+(?:\.[0-9]+))/) {
+	} elsif ($range =~ m/(\d+(?:\.\d+))/) {
 		return { low => undef, high => $1 };
 	} else {
 		WARNING "invalid threshold range: $range";
@@ -273,11 +273,11 @@ sub THRESHOLD
 	if ($options{critical}) {
 		my $range = _inflate($options{critical});
 		if ($range->{low} && $value < $range->{low}) {
-			$msg ||= "$value below critically low level, $range->{low}.";
+			$msg ||= "value, $value below critically low level, $range->{low}.";
 			CRITICAL $msg;
 			return;
 		} elsif ($range->{high} && $value > $range->{high}) {
-			$msg ||= "$value above critically high level, $range->{high}.";
+			$msg ||= "value, $value above critically high level, $range->{high}.";
 			CRITICAL $msg;
 			return;
 		}
@@ -285,11 +285,11 @@ sub THRESHOLD
 	if ($options{warning}) {
 		my $range = _inflate($options{warning});
 		if ($range->{low} && $value < $range->{low}) {
-			$msg ||= "$value below lower warning limit, $range->{low}.";
+			$msg ||= "value, $value below lower warning limit, $range->{low}.";
 			WARNING $msg;
 			return;
 		} elsif ($range->{high} && $value > $range->{high}) {
-			$msg ||= "$value above upper warning limit, $range->{high}.";
+			$msg ||= "value, $value above upper warning limit, $range->{high}.";
 			WARNING $msg;
 			return;
 		}
@@ -297,7 +297,7 @@ sub THRESHOLD
 	if ( $options{skip_ok}) {
 		return;
 	}
-	$msg ||= "$value does not exceed any thresholds.";
+	$msg ||= "value, $value does not exceed any thresholds.";
 	OK $msg;
 }
 
