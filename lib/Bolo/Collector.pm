@@ -250,10 +250,55 @@ sub TRACK
 	warn "Unknown data type given to TRACK: $type\n";
 }
 
+sub _inflate
+{
+	my ($range) = @_;
+	if ($range =~ m/([0-9]+(?:\.[0-9]+)):([0-9]+(?:\.[0-9]+))/) {
+		return { low => $1, high => $2 };
+	} elsif ($range =~ m/([0-9]+(?:\.[0-9]+)):/) {
+		return { low => $1, high => undef };
+	} elsif ($range =~ m/:([0-9]+(?:\.[0-9]+))/) {
+		return { low => undef, high => $1 };
+	} elsif ($range =~ m/([0-9]+(?:\.[0-9]+))/) {
+		return { low => undef, high => $1 };
+	} else {
+		WARNING "invalid threshold range: $range";
+		return { low => undef, high => undef };
+	}
+}
+
 sub THRESHOLD
 {
 	my ($value, $msg, %options) = @_;
-	# FIXME: need threshold format parser
+	if ($options{critical}) {
+		my $range = _inflate($options{critical});
+		if ($range->{low} && $value < $range->{low}) {
+			$msg ||= "$value below critically low level, $range->{low}.";
+			CRITICAL $msg;
+			return;
+		} elsif ($range->{high} && $value > $range->{high}) {
+			$msg ||= "$value above critically high level, $range->{high}.";
+			CRITICAL $msg;
+			return;
+		}
+	}
+	if ($options{warning}) {
+		my $range = _inflate($options{warning});
+		if ($range->{low} && $value < $range->{low}) {
+			$msg ||= "$value below lower warning limit, $range->{low}.";
+			WARNING $msg;
+			return;
+		} elsif ($range->{high} && $value > $range->{high}) {
+			$msg ||= "$value above upper warning limit, $range->{high}.";
+			WARNING $msg;
+			return;
+		}
+	}
+	if ( $options{skip_ok}) {
+		return;
+	}
+	$msg ||= "$value does not exceed any thresholds.";
+	OK $msg;
 }
 
 sub KEY
