@@ -1,0 +1,78 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Bolo::Collector;
+use Net::SNMP ();
+use YAML::XS qw/LoadFile/;
+
+OPTION 'host|H=s',
+        usage => '-H, --host <hostname-or-IP>',
+        required => 1;
+
+OPTION 'community|C=s',
+        required => 1;
+
+OPTION 'config|c=s',
+        usage => '-c, --config <path-to-config>';
+
+START;
+PREFIX OPTION->{host};
+
+my $CONFIG = {};
+if (-f OPTION->{config}) {
+	$CONFIG = LoadFile(OPTION->{config})
+		or die "failed to load config file: ".OPTION->{config}.", $!";
+}
+
+my %OID = (
+	sysName           => '.1.3.6.1.2.1.1.5.0',
+	cpmCPUTotal5sec   => '.1.3.6.1.4.1.9.9.109.1.1.1.1.3',
+	cpmCPUTotal1min   => '.1.3.6.1.4.1.9.9.109.1.1.1.1.4',
+	cpmCPUTotal5min   => '.1.3.6.1.4.1.9.9.109.1.1.1.1.5',
+
+	ciscoMemoryPoolUsed => '.1.3.6.1.4.1.9.9.48.1.1.1.5.1',
+	ciscoMemoryPoolFree => '.1.3.6.1.4.1.9.9.48.1.1.1.6.1',
+);
+
+my $snmp = Net::SNMP->session(
+	-hostname  => OPTION->{host},
+	-version   => 'snmpv2c',
+	-community => OPTION->{community},
+) or die "SNMP connection failed: $!.";
+
+my $five_s = $OID{cpmCPUTotal5sec};
+my $one_m  = $OID{cpmCPUTotal1min};
+my $five_m = $OID{cpmCPUTotal5min};
+my $cpus = 1;
+my $r = $snmp->get_request(-varbindlist => [$OID{sysName}]);
+my $sysname = lc $r->{$OID{sysName}};
+my @oids = ($OID{ciscoMemoryPoolUsed}, $OID{ciscoMemoryPoolFree});
+if ($CONFIG->{$sysname}) {
+	for (@{$CONFIG->{$sysname}{cpus}}) {
+		push @oids, "$OID{cpmCPUTotal5sec}.$_", "$OID{cpmCPUTotal1min}.$_", "$OID{cpmCPUTotal5min}.$_";
+	}
+	$cpus = scalar @{$CONFIG->{$sysname}{cpus}};
+} else {
+	push @oids, "$OID{cpmCPUTotal5sec}.1", "$OID{cpmCPUTotal1min}.1", "$OID{cpmCPUTotal5min}.1";
+}
+
+$r = $snmp->get_request(-varbindlist => \@oids);
+exit 1 unless defined $r;
+
+my %total = ('5s' => 0, '1m' => 0, '5m' => 0);
+for (keys %$r) {
+	$total{'5s'} += $r->{$_}
+		if $_ =~ m/$five_s/;
+	$total{'1m'} += $r->{$_}
+		if $_ =~ m/$one_m/;
+	$total{'5m'} += $r->{$_}
+		if $_ =~ m/$five_m/;
+}
+KEY 'snmp.sysName', $sysname;
+PREFIX $sysname;
+SAMPLE 'snmp.cisco.sys.cpu:5s', $total{'5s'} / $cpus;
+SAMPLE 'snmp.cisco.sys.cpu:1m', $total{'1m'} / $cpus;
+SAMPLE 'snmp.cisco.sys.cpu:5m', $total{'5m'} / $cpus;
+SAMPLE 'snmp.cisco.sys.mem:used', $r->{$OID{ciscoMemoryPoolUsed}};
+SAMPLE 'snmp.cisco.sys.mem:free', $r->{$OID{ciscoMemoryPoolFree}};

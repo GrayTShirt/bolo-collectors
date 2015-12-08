@@ -1,0 +1,122 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Bolo::Collector;
+use Net::SNMP ();
+use YAML::XS qw/LoadFile/;
+
+OPTION 'host|H=s',
+        usage => '-H, --host <hostname-or-IP>',
+        required => 1;
+
+OPTION 'community|C=s',
+        required => 1;
+
+OPTION 'config|c=s',
+        usage => '-c, --config <path-to-config>',
+        required => 1;
+
+START;
+PREFIX OPTION->{host};
+
+my $CONFIG = {};
+if (-f OPTION->{config}) {
+	$CONFIG = LoadFile(OPTION->{config})
+		or die "failed to load config file: ".OPTION->{config}.", $!";
+}
+
+my $ifEntry  = '.1.3.6.1.2.1.2.2.1';
+my $ifXEntry = '.1.3.6.1.2.1.31.1.1.1';
+my %OID = (
+	sysName       => '.1.3.6.1.2.1.1.5.0',
+
+	ifDescr       => "$ifEntry.2",
+	ifSpeed       => "$ifEntry.5",
+	ifAdminStatus => "$ifEntry.7",
+	ifOperStatus  => "$ifEntry.8",
+	ifInDiscards  => "$ifEntry.13",
+	ifInErrors    => "$ifEntry.14",
+	ifOutDiscards => "$ifEntry.19",
+	ifOutErrors   => "$ifEntry.20",
+
+	ifName             => "$ifXEntry.1",
+	ifHCInOctets       => "$ifXEntry.6",
+	ifHCOutOctets      => "$ifXEntry.10",
+	ifConnectorPresent => "$ifXEntry.17",
+	ifAlias            => "$ifXEntry.18",
+);
+
+my $snmp = Net::SNMP->session(
+	-hostname  => OPTION->{host},
+	-version   => 'snmpv2c',
+	-community => OPTION->{community},
+) or die "SNMP connection failed: $!.";
+
+my $r = $snmp->get_request(-varbindlist => [$OID{sysName}]);
+exit 1 unless defined $r;
+
+my $sysname = lc($r->{$OID{sysName}});
+KEY 'snmp.sysName', $sysname;
+PREFIX $sysname;
+
+BAIL CRITICAL => "no config present for $sysname in (".OPTION->{config}.")" unless $CONFIG->{$sysname};
+
+for my $i (@{$CONFIG->{$sysname}{ifaces}}) {
+	my @oids = ();
+	for (values %OID) {
+		push @oids, "$_.$i" unless $_ eq $OID{sysName};
+	}
+
+	$r = $snmp->get_request(-varbindlist => \@oids);
+	BAIL CRITICAL => "error fetching snmp for $sysname: ".$snmp->error unless $r;
+	DUMP $r;
+
+	(my $alias = $r->{"$OID{ifAlias}.$i"}) =~ s/[ \t#\^\n@&\$\%]+/_/g;
+	my $ifname = $r->{"$OID{ifName}.$i"}."-$alias";
+
+	my $oper  = $r->{"$OID{ifOperStatus}.$i"};
+	my $admin = $r->{"$OID{ifAdminStatus}.$i"};
+
+	KEY "snmp.cisco.iface.status.oper:$ifname",  $oper;
+	KEY "snmp.cisco.iface.status.admin:$ifname", $admin;
+
+	RATE "snmp.cisco.iface:octets.in:$ifname",    $r->{"$OID{ifHCInOctets}.$i"};
+	RATE "snmp.cisco.iface:octets.out:$ifname",   $r->{"$OID{ifHCOutOctets}.$i"};
+	RATE "snmp.cisco.iface:util.in:$ifname",      $r->{"$OID{ifHCInOctets}.$i"} * 8 /  $r->{"$OID{ifSpeed}.$i"};
+	RATE "snmp.cisco.iface:util.out:$ifname",     $r->{"$OID{ifHCOutOctets}.$i"} * 8 /  $r->{"$OID{ifSpeed}.$i"};
+	RATE "snmp.cisco.iface:errors.in:$ifname",    $r->{"$OID{ifInErrors}.$i"};
+	RATE "snmp.cisco.iface:errors.out:$ifname",   $r->{"$OID{ifOutErrors}.$i"};
+	RATE "snmp.cisco.iface:discards.in:$ifname",  $r->{"$OID{ifInDiscards}.$i"};
+	RATE "snmp.cisco.iface:discards.out:$ifname", $r->{"$OID{ifOutDiscards}.$i"};
+
+	my $status = "UNKNOWN";
+	my $message = "$ifname is oper($oper) / admin($admin)";
+
+	if ($r->{"$OID{ifConnectorPresent}.$i"} != 1 && $r->{"$OID{ifDescr}.$i"} !~ m/[Vv]lan/) {
+		CRITICAL "snmp.cisco.iface:$ifname" => "no connector present for %s", $ifname;
+
+	} elsif ($oper !~ m/^\d+$/ or $admin !~ m/^\d+$/) {
+		UNKNOWN "snmp.cisco.iface:$ifname" => "%s is oper(%s) / admin(%s)",
+		        $ifname, $oper, $admin;
+
+	} elsif ($admin == 3) {
+		OK "snmp.cisco.iface:$ifname" => "%s is configured for TEST mode", $ifname;
+
+	} elsif ($oper == 3) {
+		WARNING "snmp.cisco.iface:$ifname" => "%s is in TEST mode", $ifname;
+
+	} elsif ($oper == $admin) {
+		OK "snmp.cisco.iface:$ifname" => "No operational / administrative issues with %s interface status", $ifname;
+
+	} elsif ($oper == 2 and $admin == 1) {
+		CRITICAL "snmp.cisco.iface:$ifname" => "%s is DOWN, but is configured to be up", $ifname;
+
+	} elsif ($oper == 1 and $admin == 2) {
+		WARNING "snmp.cisco.iface:$ifname" => "%s is UP, but is configured to be down", $ifname;
+
+	} else {
+		UNKNOWN "snmp.cisco.iface:$ifname" => "%s is oper(%s) / admin(%s)",
+		        $ifname, $oper, $admin;
+	}
+}
