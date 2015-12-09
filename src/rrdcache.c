@@ -66,6 +66,7 @@ int parse_options(int argc, char **argv)
 				return 1;
 			}
 			ADDRESS = strdup(argv[i]);
+			continue;
 		}
 
 		fprintf(stderr, "Unrecognized argument '%s'\n", argv[i]);
