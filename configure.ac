@@ -29,7 +29,7 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_PROG_CC
 
 SAVE_LIBS=$LIBS
-AC_HAVE_LIBRARY(vigor,,    AC_MSG_ERROR(Missing libvigor - see http://github.com/filefrog/libvigor))
+AC_HAVE_LIBRARY(vigor,,    AC_MSG_ERROR(Missing libvigor - see http://github.com/jhunt/libvigor))
 VIGOR_LIBS=$LIBS
 LIBS=
 AC_SEARCH_LIBS([cos,floor,sqrt], [m], [], [

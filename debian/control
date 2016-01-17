@@ -2,7 +2,7 @@ Source: bolo-collectors
 Section: admin
 Priority: optional
 Maintainer: James Hunt <james@jameshunt.us>
-Homepage: https://github.com/filefrog/bolo
+Homepage: https://github.com/bolo/bolo-collectors
 Standards-Version: 3.9.3
 Build-Depends: debhelper (>= 8),
                iptables,

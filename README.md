@@ -47,6 +47,6 @@ The following collectors exist:
                     response times (IPv4 only)
 
 
-[libvigor]:   https://github.com/filefrog/libvigor
-[bolo]:       https://github.com/filefrog/bolo
-[clockwork]:  https://github.com/filefrog/clockwork
+[libvigor]:   https://github.com/jhunt/libvigor
+[bolo]:       https://github.com/bolo/bolo
+[clockwork]:  https://github.com/jhunt/clockwork

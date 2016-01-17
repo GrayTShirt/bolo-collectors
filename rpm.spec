@@ -5,7 +5,7 @@ Summary:        Monitoring System Collectors
 
 Group:          Applications/System
 License:        GPLv3+
-URL:            https://github.com/filefrog/bolo-collectors
+URL:            https://github.com/bolo/bolo-collectors
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 

@@ -13,7 +13,7 @@ CONFIG_OPTS+=("PKG_CONFIG_PATH=${BUILD_PREFIX}/lib/pkgconfig")
 CONFIG_OPTS+=("--prefix=${BUILD_PREFIX}")
 
 # dep: ctap
-git clone --depth 1 git://github.com/filefrog/ctap.git
+git clone --depth 1 git://github.com/jhunt/ctap.git
 ( cd ctap; ./bootstrap; ./configure "${CONFIG_OPTS[@]}"; make check; make install)
 
 # dep: libsodium
@@ -25,7 +25,7 @@ git clone --depth 1 git://github.com/zeromq/libzmq.git
 ( cd libzmq; ./autogen.sh; ./configure "${CONFIG_OPTS[@]}" --with-libsodium=yes; make check; make install)
 
 # dep: libvigor
-git clone --depth 1 git://github.com/filefrog/libvigor.git
+git clone --depth 1 git://github.com/jhunt/libvigor.git
 ( cd libvigor; ./bootstrap; ./configure "${CONFIG_OPTS[@]}"; make check; make install)
 
 ./bootstrap
