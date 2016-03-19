@@ -40,6 +40,8 @@ echo "BUILDING ${PROJECT} v${VERSION} (${DISTARCHIVE})"
 echo
 
 set -e
+./bootstrap
+./configure
 make distcheck
 ls -l ${DISTARCHVE}
 echo
