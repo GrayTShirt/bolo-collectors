@@ -144,7 +144,9 @@ int parse_options(int argc, char **argv)
 
 		break;
 	}
-	if (!PREFIX) PREFIX = fqdn();
+
+	INIT_PREFIX();
+
 	RULES = argv + i;
 	return argv[i] == NULL ? 1 : 0;
 }

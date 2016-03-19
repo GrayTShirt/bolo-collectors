@@ -162,7 +162,12 @@ my $PREFIX;
 sub _init_prefix
 {
 	return if $PREFIX;
-	(my $script = $0) =~ s!.*/!!;
+
+	print STDERR "dbolo-prefix='$ENV{DBOLO_PREFIX}'\n";
+	$PREFIX = $ENV{DBOLO_PREFIX};
+	return if $PREFIX;
+
+	(my $script = $0) =~ s{.*/}{};
 	$PREFIX = FQDN.":$script";
 }
 sub PREFIX

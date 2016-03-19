@@ -90,8 +90,6 @@ int read_creds(const char *file, char **user, char **pass)
 
 int main(int argc, char **argv)
 {
-	PREFIX = fqdn();
-
 	char *creds    = NULL;
 	char *database = strdup("postgres");
 	char *host     = strdup("localhost");
@@ -161,6 +159,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "USAGE: %s [options] /path/to/queries.sql\n", argv[0]);
 		return 1;
 	}
+
+	INIT_PREFIX();
 
 	char *user = NULL;
 	char *pass = NULL;

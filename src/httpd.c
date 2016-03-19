@@ -178,6 +178,8 @@ int parse_options(int argc, char **argv)
 			errors++;
 		}
 	}
-	if (!PREFIX) PREFIX = fqdn();
+
+	INIT_PREFIX();
+
 	return errors;
 }

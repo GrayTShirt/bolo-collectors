@@ -26,7 +26,9 @@ EOF
 
 use POSIX;
 use Getopt::Long qw/:config bundling/;
-our %OPTIONS = ();
+our %OPTIONS = (
+	prefix => $ENV{DBOLO_PREFIX},
+);
 GetOptions(\%OPTIONS, qw/
 	help|h|?
 	debug|D

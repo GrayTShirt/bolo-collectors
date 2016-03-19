@@ -142,7 +142,9 @@ int parse_options(int argc, char **argv)
 		fprintf(stderr, "Unrecognized argument '%s'\n", argv[i]);
 		errors++;
 	}
-	if (!PREFIX) PREFIX = fqdn();
+
+	INIT_PREFIX();
+
 	ts = time_s();
 
 	if (nflagged == 0) {

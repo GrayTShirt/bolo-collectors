@@ -114,7 +114,8 @@ int parse_options(int argc, char **argv)
 		fprintf(stderr, "Unrecognized argument '%s'\n", argv[i]);
 		errors++;
 	}
-	if (!PREFIX) PREFIX = fqdn();
+
+	INIT_PREFIX();
 
 	if (nflagged == 0) {
 		if (!masked("meminfo"))   RUN("meminfo");

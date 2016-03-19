@@ -175,7 +175,9 @@ int parse_options(int argc, char **argv)
 
 		break;
 	}
-	if (!PREFIX) PREFIX = fqdn();
+
+	INIT_PREFIX();
+
 	if (!OPTIONS.host) OPTIONS.host = fqdn();
 	ts = time_s();
 	OPTIONS.ports  = argv + i;

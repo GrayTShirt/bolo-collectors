@@ -71,7 +71,9 @@ int parse_options(int argc, char **argv)
 		fprintf(stderr, "Unrecognized argument '%s'\n", argv[i]);
 		errors++;
 	}
-	if (!PREFIX) PREFIX = fqdn();
+
+	INIT_PREFIX();
+
 	if (!ADDRESS) ADDRESS = getenv("RRDCACHED_ADDRESS");
 	if (!ADDRESS) ADDRESS = "unix:/tmp/rrdcached.sock";
 	return errors;

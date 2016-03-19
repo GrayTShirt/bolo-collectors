@@ -561,7 +561,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "  avg(size): %f\n",  1.0 * ctx.size.sum / ctx.count);
 	}
 
-	PREFIX = fqdn();
+	INIT_PREFIX();
+
 	ts = time_s();
 	if (ctx.track == TRACK_COUNT) {
 		printf("SAMPLE %i %s:files:%s %lu\n", ts, PREFIX, ctx.name, ctx.count);
