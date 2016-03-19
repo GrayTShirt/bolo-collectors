@@ -1,6 +1,9 @@
-# New Features
+# Bug Fixes
 
-- New thresholds functions in Perl lib
-- New snmp_cisco_detect collector
-- Better Cisco SNMP device indexing
-- New Postgres health metrics
+- share/* is now included in the dist tarball.
+  It was mistakenly omitted in previous releases.
+- `make distcheck` now works! (#11)
+
+# Developer Stuff
+
+- release process is now fully scripted in re/lease
