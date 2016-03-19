@@ -1,0 +1,6 @@
+# New Features
+
+- New thresholds functions in Perl lib
+- New snmp_cisco_detect collector
+- Better Cisco SNMP device indexing
+- New Postgres health metrics
