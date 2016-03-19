@@ -6,7 +6,7 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS  = -I build
 
 EXTRA_DIST  =
-EXTRA_DIST += bootstrap
+EXTRA_DIST += bootstrap share
 EXTRA_DIST += lib/Bolo/Collector.pm
 
 LDADD = $(VIGOR_LIBS)
@@ -73,11 +73,11 @@ endif
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(PERLDIR)/Bolo
-	$(INSTALL_DATA) lib/Bolo/Collector.pm $(DESTDIR)$(PERLDIR)/Bolo/Collector.pm
+	$(INSTALL_DATA) $(srcdir)/lib/Bolo/Collector.pm $(DESTDIR)$(PERLDIR)/Bolo/Collector.pm
 
 uninstall-local:
-	$(RM) -f $(DESTDIR)$(PERLDIR)/Bolo/Collector.pm
-	$(RMDIR) $(DESTDIR)$(PERLDIR)/Bolo
+	rm -f $(DESTDIR)$(PERLDIR)/Bolo/Collector.pm
+	rmdir $(DESTDIR)$(PERLDIR)/Bolo
 
 ############################################################
 
