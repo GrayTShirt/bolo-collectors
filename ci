@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -ex
 
+CPUS=4
+WANT_CTAP=2.0.0
+WANT_LIBSODIUM=1.0.8
+WANT_LIBZMQ=4.1.4
+WANT_LIBVIGOR=1.2.10
+
 mkdir tmp
 BUILD_PREFIX=$PWD/tmp
 
@@ -13,24 +19,24 @@ CONFIG_OPTS+=("PKG_CONFIG_PATH=${BUILD_PREFIX}/lib/pkgconfig")
 CONFIG_OPTS+=("--prefix=${BUILD_PREFIX}")
 
 # dep: ctap
-git clone --depth 1 git://github.com/jhunt/ctap.git
-( cd ctap; ./bootstrap; ./configure "${CONFIG_OPTS[@]}"; make check; make install)
+curl -Ls https://github.com/jhunt/ctap/releases/download/v${WANT_CTAP}/ctap-${WANT_CTAP}.tar.gz | tar -xz
+(cd ctap-${WANT_CTAP}; ./configure "${CONFIG_OPTS[@]}"; make -j${CPUS} install)
 
 # dep: libsodium
-git clone --depth 1 git://github.com/jedisct1/libsodium.git
-( cd libsodium; ./autogen.sh; ./configure "${CONFIG_OPTS[@]}"; make check; make install)
+curl -Ls https://github.com/jedisct1/libsodium/releases/download/${WANT_LIBSODIUM}/libsodium-${WANT_LIBSODIUM}.tar.gz | tar -xz
+(cd libsodium-${WANT_LIBSODIUM}; ./configure "${CONFIG_OPTS[@]}"; make -j${CPUS} install)
 
 # dep: libzmq
-git clone --depth 1 git://github.com/zeromq/libzmq.git
-( cd libzmq; ./autogen.sh; ./configure "${CONFIG_OPTS[@]}" --with-libsodium=yes; make check; make install)
+curl -Ls http://download.zeromq.org/zeromq-${WANT_LIBZMQ}.tar.gz | tar -xz
+(cd zeromq-${WANT_LIBZMQ}; ./configure "${CONFIG_OPTS[@]}" --with-libsodium=yes; make -j${CPUS} install)
 
 # dep: libvigor
-git clone --depth 1 git://github.com/jhunt/libvigor.git
-( cd libvigor; ./bootstrap; ./configure "${CONFIG_OPTS[@]}"; make check; make install)
+curl -Ls https://github.com/jhunt/libvigor/releases/download/v${WANT_LIBVIGOR}/libvigor-${WANT_LIBVIGOR}.tar.gz | tar -xz
+(cd libvigor-${WANT_LIBVIGOR}; ./configure "${CONFIG_OPTS[@]}"; make -j${CPUS} install)
 
 ./bootstrap
 ./configure "${CONFIG_OPTS[@]}"
 
-make
-make check
-make install
+make -j${CPUS}
+make -j${CPUS} check
+make           install
