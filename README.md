@@ -1,6 +1,8 @@
 bolo-collectors - Collectors for Bolo
 =====================================
 
+[![Travis](https://img.shields.io/travis/bolo/bolo-collectors.svg)](https://travis-ci.org/bolo/bolo-collectors)
+
 [bolo][bolo] is a toolkit for building distributed, scalable
 monitoring systems.
 
