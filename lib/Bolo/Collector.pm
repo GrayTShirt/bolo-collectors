@@ -243,7 +243,7 @@ sub RATE
 	defined $value or warn "RATE not given a value\n" and return;
 
 	$name = $name ? PREFIX.":$name" : PREFIX;
-	printf "RATE %i %s %0.5lf\n", int(time), $name, $value;
+	printf "RATE %i %s %llu\n", int(time), $name, $value;
 }
 
 sub TRACK
