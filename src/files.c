@@ -487,6 +487,12 @@ int main(int argc, char **argv)
 			ctx.debug = 1;
 			continue;
 		}
+		if (streq(argv[i], "-prefix") || streq(argv[i], "-p")) {
+			i++; if (!argv[i]) s_usage();
+			free(PREFIX);
+			PREFIX = strdup(argv[i]);
+			continue;
+		}
 		if (streq(argv[i], "-dumptree")) {
 			ctx.dumptree = 1;
 			continue;
