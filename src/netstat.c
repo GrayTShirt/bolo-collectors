@@ -57,7 +57,7 @@ int push_alias(const char *spec);
 int main (int argc, char **argv)
 {
 	if (parse_options(argc, argv) != 0) {
-		fprintf(stderr, "USAGE: %s [-p prefix] [-l port,port,port] [-46tu]\n", argv[0]);
+		fprintf(stderr, "USAGE: %s [-p prefix] [name=client:port-server:port/proc ...]\n", argv[0]);
 		exit(1);
 	}
 
@@ -101,7 +101,7 @@ int parse_options(int argc, char **argv)
 
 		if (streq(argv[i], "-h") || streq(argv[i], "-?") || streq(argv[i], "--help")) {
 			fprintf(stdout, "netstat (a Bolo collector)\n"
-			                "USAGE: netstat [flags] [metrics]\n"
+			                "USAGE: netstat [flags] [metrics] spec ...\n"
 			                "\n"
 			                "flags:\n"
 			                "   -h, --help               Show this help screen\n"
@@ -118,6 +118,31 @@ int parse_options(int argc, char **argv)
 			                "   By default, all metrics are collected.  You can suppress specific\n"
 			                "   metric sets by prefixing its name with \"no\", without having to\n"
 			                "   list out everything you want explicitly.\n"
+			                "\n"
+			                "specs:\n"
+			                "\n"
+			                "   Each spec provides a way of filtering and categorizing network\n"
+			                "   connections based on the endpoints and the listening program.\n"
+			                "\n"
+			                "   The format of a spec is (whitespace added for clarity):\n"
+			                "\n"
+			                "       name = client-ip : client-port - server-ip : server-port / program\n"
+			                "\n"
+			                "   `name' will be used to name the measurements.\n"
+			                "\n"
+			                "   `client-ip' is the IP address of the connecting client, or '*' to\n"
+			                "   count all connecting clients.\n"
+			                "\n"
+			                "   `client-port' is the TCP or UDP source port from which the client is\n"
+			                "   sending data.  '*' matches all source ports.\n"
+			                "\n"
+			                "   `server-ip' is the IP address that the server has bound to and is\n"
+			                "   listening on, or '*' to match any.\n"
+			                "\n"
+			                "   `server-port' is the TCP or UDP port that the server is listening on.\n"
+			                "   Again, '*' handles any and all ports.\n"
+			                "\n"
+			                "   `program' is the name of the server-side process, or '*' to match any.\n"
 			                "\n");
 			exit(0);
 		}
