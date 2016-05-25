@@ -35,6 +35,7 @@ collectors_PROGRAMS = linux files tcp netstat
 
 files_SOURCES    = src/files.c src/common.h
 linux_SOURCES    = src/linux.c src/common.h
+linux_LDADD      = $(LINUX_LIBS) $(VIGOR_LIBS)
 tcp_SOURCES      = src/tcp.c   src/common.h
 tcp_LDADD        = -lpthread $(VIGOR_LIBS)
 netstat_SOURCES  = src/netstat.c   src/common.h

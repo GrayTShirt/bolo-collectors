@@ -1,10 +1,27 @@
 #include "common.h"
 #include <dirent.h>
 #include <sys/statvfs.h>
+#include <pcre.h>
 
 #define PROC "/proc"
 
 static char buf[8192];
+
+#define MATCH_ANY   0
+#define MATCH_IFACE 1
+#define MATCH_MOUNT 2
+#define MATCH_DEV   3
+
+typedef struct __matcher {
+	int         subject; /* what type of thing to match (a MATCH_* const) */
+	char       *pattern; /* raw pattern source string.                    */
+	pcre       *regex;   /* compiled pattern to match against.            */
+	pcre_extra *extra;   /* additional stuff from pcre_study (perf tweak) */
+
+	struct __matcher *next;
+} matcher_t;
+static matcher_t *EXCLUDE = NULL;
+static matcher_t *INCLUDE = NULL;
 
 int collect_meminfo(void);
 int collect_loadavg(void);
@@ -25,6 +42,8 @@ static hash_t MASK = { 0 };
 #define SKIP(s)    hash_set(&MASK, (s), SKIP_TAG)
 
 int parse_options(int argc, char **argv);
+int matches(int type, const char *name);
+int append_matcher(matcher_t **root, const char *flag, const char *value);
 
 int main(int argc, char **argv)
 {
@@ -57,10 +76,32 @@ int parse_options(int argc, char **argv)
 	for (i = 1; i < argc; ++i) {
 		if (streq(argv[i], "-p") || streq(argv[i], "--prefix")) {
 			if (++i >= argc) {
-				fprintf(stderr, "Missing required value for -p\n");
+				fprintf(stderr, "Missing required value for --prefix flag\n");
 				return 1;
 			}
 			PREFIX = strdup(argv[i]);
+			continue;
+		}
+
+		if (streq(argv[i], "-i") || streq(argv[i], "--include")) {
+			if (++i >= argc) {
+				fprintf(stderr, "Missing required value for --include flag\n");
+				return 1;
+			}
+			if (append_matcher(&INCLUDE, "--include", argv[i]) != 0) {
+				return 1;
+			}
+			continue;
+		}
+
+		if (streq(argv[i], "-x") || streq(argv[i], "--exclude")) {
+			if (++i >= argc) {
+				fprintf(stderr, "Missing required value for --exclude flag\n");
+				return 1;
+			}
+			if (append_matcher(&EXCLUDE, "--exclude", argv[i]) != 0) {
+				return 1;
+			}
 			continue;
 		}
 
@@ -69,9 +110,22 @@ int parse_options(int argc, char **argv)
 			                "USAGE: linux [flags] [metrics]\n"
 			                "\n"
 			                "flags:\n"
-			                "   -h, --help               Show this help screen\n"
-			                "   -p, --prefix PREFIX      Use the given metric prefix\n"
-			                "                            (FQDN is used by default)\n"
+			                "   -h, --help                 Show this help screen\n"
+			                "   -p, --prefix PREFIX        Use the given metric prefix\n"
+			                "                              (FQDN is used by default)\n"
+			                "\n"
+			                "   -i, --include type:regex   Only consider things of the given type\n"
+			                "                              that match /^regex$/, using PCRE.\n"
+			                "                              By default, all things are included.\n"
+			                "\n"
+			                "   -x, --exclude type:regex   Don't consider things (of the given type)\n"
+			                "                              that match /^regex$/, using PCRE.\n"
+			                "                              By default, nothing is excluded.\n"
+			                "\n"
+			                "                              Note: --exclude rules are processed after\n"
+			                "                              all --include rules, so you usually want\n"
+			                "                              to match liberally first, and exclude\n"
+			                "                              conservatively.\n"
 			                "\n"
 			                "metrics:\n"
 			                "\n"
@@ -129,6 +183,97 @@ int parse_options(int argc, char **argv)
 		if (!masked("netdev"))    RUN("netdev");
 	}
 	return errors;
+}
+
+int matches(int type, const char *name)
+{
+	matcher_t *m;
+
+	if ((m = INCLUDE) != NULL) {
+		while (m) {
+			if ((m->subject == MATCH_ANY || m->subject == type)
+			 && pcre_exec(m->regex, m->extra, name, strlen(name), 0, 0, NULL, 0) == 0) {
+				goto excludes;
+			}
+			m = m->next;
+		}
+		return 0; /* not included */
+	}
+
+excludes:
+	m = EXCLUDE;
+	while (m) {
+		if ((m->subject == MATCH_ANY || m->subject == type)
+		 && pcre_exec(m->regex, m->extra, name, strlen(name), 0, 0, NULL, 0) == 0) {
+			return 0; /* excluded */
+		}
+		m = m->next;
+	}
+
+	return 1;
+}
+
+int append_matcher(matcher_t **root, const char *flag, const char *value)
+{
+	matcher_t *m;
+	const char *colon, *re_err;
+	int re_off;
+
+	m = calloc(1, sizeof(matcher_t));
+	if (!m) {
+		fprintf(stderr, "unable to allocate memory: %s (errno %d)\n", strerror(errno), errno);
+		exit(1);
+	}
+
+	m->subject = MATCH_ANY;
+	if ((colon = strchr(value, ':')) != NULL) {
+		if (strncasecmp(value, "iface:", colon - value) == 0) {
+			m->subject = MATCH_IFACE;
+		} else if (strncasecmp(value, "dev:", colon - value) == 0) {
+			m->subject = MATCH_DEV;
+		} else if (strncasecmp(value, "mount:", colon - value) == 0) {
+			m->subject = MATCH_MOUNT;
+		} else {
+			fprintf(stderr, "Invalid type in type:regex specifier for %s flag\n", flag);
+			free(m);
+			return 1;
+		}
+		value = colon + 1;
+	}
+
+	if (!*value) {
+		fprintf(stderr, "Missing regex in type:regex specifier for %s flag\n", flag);
+		free(m);
+		return 1;
+	}
+
+	m->pattern = calloc(1 + strlen(value) + 1 + 1, sizeof(char));
+	if (!m->pattern) {
+		fprintf(stderr, "unable to allocate memory: %s (errno %d)\n", strerror(errno), errno);
+		exit(1);
+	}
+	m->pattern[0] = '^';
+	memcpy(m->pattern+1, value, strlen(value));
+	m->pattern[1+strlen(value)] = '$';
+
+	m->regex = pcre_compile(m->pattern, PCRE_ANCHORED, &re_err, &re_off, NULL);
+	if (!m->regex) {
+		fprintf(stderr, "Bad regex '%s' (error %s) for %s flag\n", m->pattern, flag, re_err);
+		free(m->pattern);
+		free(m);
+		return 1;
+	}
+	m->extra = pcre_study(m->regex, 0, &re_err);
+
+	if (!*root) {
+		*root = m;
+	} else {
+		while (root && (*root)->next) {
+			root = &(*root)->next;
+		}
+		(*root)->next = m;
+	}
+	return 0;
 }
 
 int collect_meminfo(void)
@@ -411,6 +556,9 @@ int collect_mounts(void)
 		 || !major(st.st_dev))
 			continue;
 
+		if (!matches(MATCH_MOUNT, path))
+			continue;
+
 		printf("KEY %s:fs:%s %s\n",  PREFIX, path, dev);
 		printf("KEY %s:dev:%s %s\n", PREFIX, dev, path);
 
@@ -491,6 +639,9 @@ int collect_diskstats(void)
 		if (!is_device(name))
 			continue;
 
+		if (!matches(MATCH_DEV, name))
+			continue;
+
 		printf("RATE %i %s:diskio:%s:rd-iops %lu\n",  ts, PREFIX, name, rd[0]);
 		printf("RATE %i %s:diskio:%s:rd-miops %lu\n", ts, PREFIX, name, rd[1]);
 		printf("RATE %i %s:diskio:%s:rd-msec %lu\n",  ts, PREFIX, name, rd[2]);
@@ -547,6 +698,9 @@ int collect_netdev(void)
 			&tx.overruns, &tx.collisions, &tx.carrier, &tx.compressed);
 
 		if (rc < 17)
+			continue;
+
+		if (!matches(MATCH_IFACE, name))
 			continue;
 
 		printf("RATE %i %s:net:%s:rx.bytes %lu\n",      ts, PREFIX, name, rx.bytes);

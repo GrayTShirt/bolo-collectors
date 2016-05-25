@@ -31,14 +31,18 @@ AC_PROG_CC
 SAVE_LIBS=$LIBS
 AC_HAVE_LIBRARY(vigor,,    AC_MSG_ERROR(Missing libvigor - see http://github.com/jhunt/libvigor))
 VIGOR_LIBS=$LIBS
-LIBS=
+LIBS=$SAVE_LIBS
 AC_SEARCH_LIBS([cos,floor,sqrt], [m], [], [
 	AC_MSG_ERROR([unable to find the cos(), floor(), and sqrt() functions])
 ])
 RRDQ_LIBS=$LIBS
 LIBS=$SAVE_LIBS
+AC_HAVE_LIBRARY(pcre,,     AC_MSG_ERROR(Missing PCRE library))
+LINUX_LIBS=$LIBS
+LIBS=$SAVE_LIBS
 AC_SUBST(VIGOR_LIBS)
 AC_SUBST(RRDQ_LIBS)
+AC_SUBST(LINUX_LIBS)
 
 BOLO_WITH([postgres], [the PostgreSQL libraries (libpq) and headers])
 BOLO_WITH([mysql],    [the MySQL libraries (libmysqlclient) and headers])
