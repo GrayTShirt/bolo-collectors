@@ -559,8 +559,10 @@ int collect_mounts(void)
 		if (!matches(MATCH_MOUNT, path))
 			continue;
 
-		printf("KEY %s:fs:%s %s\n",  PREFIX, path, dev);
-		printf("KEY %s:dev:%s %s\n", PREFIX, dev, path);
+		printf("KEY %s:fs:%s\n",  PREFIX, path);
+		printf("KEY %s:dev:%s\n",  PREFIX, dev);
+		printf("KEY %s:fs2dev:%s=%s\n",  PREFIX, path, dev);
+		printf("KEY %s:dev2fs:%s=%s\n", PREFIX, dev, path);
 
 		printf("SAMPLE %i %s:df:%s:inodes.total %lu\n", ts, PREFIX, path, fs.f_files);
 		printf("SAMPLE %i %s:df:%s:inodes.free %lu\n",  ts, PREFIX, path, fs.f_favail);

@@ -310,7 +310,7 @@ sub KEY
 {
 	my ($name, $value) = @_;
 	$name = $name ? PREFIX.":$name" : PREFIX;
-	printf "KEY %i %s %s\n", int(time), $name, $value;
+	printf "KEY %i %s=%s\n", int(time), $name, $value;
 }
 
 sub BAIL
