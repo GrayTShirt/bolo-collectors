@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-#define UA PACKAGE_NAME " (nginx)/" PACKAGE_VERSION
+#define UA PACKAGE_NAME " (httpd)/" PACKAGE_VERSION
 
 static size_t ng_writer(void *buf, size_t each, size_t n, void *user)
 {
