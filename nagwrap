@@ -22,7 +22,7 @@ chomp(my $fqdn = qx(/bin/hostname));
 $OPTIONS{prefix} =~ s/^:/$fqdn:/;
 
 if (!-f $ARGV[0]) {
-	printf "STATE %i %s CRITICAL cannont find check plugin %s\n", time, $OPTIONS{prefix}, $ARGV[0];
+	printf "STATE %i %s CRITICAL cannot find check plugin %s\n", time, $OPTIONS{prefix}, $ARGV[0];
 	exit 0;
 }
 
