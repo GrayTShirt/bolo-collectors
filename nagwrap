@@ -18,7 +18,7 @@ GetOptions \%OPTIONS, qw/
 die "USAGE: nagwrap -n :name:of:check -- /original/nagios/plugin [options]\n"
 	unless $OPTIONS{prefix} and @ARGV;
 
-chomp(my $fqdn = qx(/bin/hostname));
+chomp(my $fqdn = qx(/bin/hostname -f));
 $OPTIONS{prefix} =~ s/^:/$fqdn:/;
 
 if (!-f $ARGV[0]) {
