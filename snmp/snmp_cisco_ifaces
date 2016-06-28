@@ -18,13 +18,17 @@ OPTION 'config|c=s',
         required => 1;
 
 START;
-PREFIX OPTION->{host};
 
 my $CONFIG = {};
 if (-f OPTION->{config}) {
 	$CONFIG = LoadFile(OPTION->{config})
-		or die "failed to load config file: ".OPTION->{config}.", $!";
+		or BAIL CRITICAL => "failed to load config file: ".OPTION->{config}.", $!";
+	BAIL CRITICAL => "host %s, not found in config %s", OPTION->{host}, OPTION->{config}
+		unless $CONFIG->{OPTION->{host}} && $CONFIG->{OPTION->{host}}{desc};
 }
+
+PREFIX $CONFIG->{OPTION->{host}}{desc};
+my $sysname = $CONFIG->{OPTION->{host}}{desc};
 
 my $ifEntry  = '.1.3.6.1.2.1.2.2.1';
 my $ifXEntry = '.1.3.6.1.2.1.31.1.1.1';
@@ -51,18 +55,9 @@ my $snmp = Net::SNMP->session(
 	-hostname  => OPTION->{host},
 	-version   => 'snmpv2c',
 	-community => OPTION->{community},
-) or die "SNMP connection failed: $!.";
+) or BAIL CRITICAL => "SNMP connection failed: $!";
 
-my $r = $snmp->get_request(-varbindlist => [$OID{sysName}]);
-exit 1 unless defined $r;
-
-my $sysname = lc($r->{$OID{sysName}});
-KEY 'snmp.sysName', $sysname;
-PREFIX $sysname;
-
-BAIL CRITICAL => "no config present for $sysname in (".OPTION->{config}.")" unless $CONFIG->{$sysname};
-
-for my $i (@{$CONFIG->{$sysname}{ifaces}}) {
+for my $i (@{$CONFIG->{OPTION->{host}}{ifaces}}) {
 	my @oids = ();
 	for (values %OID) {
 		push @oids, "$_.$i" unless $_ eq $OID{sysName};

@@ -24,12 +24,12 @@ dist_collectors_SCRIPTS += cogd
 dist_collectors_SCRIPTS += hostinfo
 dist_collectors_SCRIPTS += nagwrap
 dist_collectors_SCRIPTS += process
-dist_collectors_SCRIPTS += snmp_cisco
-dist_collectors_SCRIPTS += snmp_ifaces
-dist_collectors_SCRIPTS += snmp_system
-dist_collectors_SCRIPTS += snmp_cisco_detect
-dist_collectors_SCRIPTS += snmp_cisco_ifaces
-dist_collectors_SCRIPTS += snmp_cisco_sys
+dist_collectors_SCRIPTS += snmp/snmp_cisco
+dist_collectors_SCRIPTS += snmp/snmp_ifaces
+dist_collectors_SCRIPTS += snmp/snmp_system
+dist_collectors_SCRIPTS += snmp/snmp_cisco_detect
+dist_collectors_SCRIPTS += snmp/snmp_cisco_ifaces
+dist_collectors_SCRIPTS += snmp/snmp_cisco_sys
 
 collectors_PROGRAMS = linux files tcp netstat
 

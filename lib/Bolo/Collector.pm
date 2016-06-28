@@ -7,7 +7,7 @@ use LWP::UserAgent;
 use HTTP::Headers;
 use HTTP::Request;
 use Getopt::Long qw/:config bundling/;
-use YAML qw/LoadFile/;
+use YAML::XS qw/LoadFile/;
 use Data::Dumper;
 
 use base qw/Exporter/;

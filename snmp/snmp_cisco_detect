@@ -73,8 +73,7 @@ my $sysname = lc $r->{$OID{sysName}};
 DEBUG "working on $sysname";
 
 $r = $snmp->get_table(-baseoid => $OID{cpuIndex});
-$OUT->{$sysname}{cpus} = [sort values %$r];
-$OUT->{$sysname}{ifaces} = [];
+$OUT->{OPTION->{host}} = { cpus => [sort values %$r], desc => $sysname, ifaces => []};
 
 $r = $snmp->get_table(-baseoid => $ifEntry);
 my $re = $snmp->get_table(-baseoid => $ifXEntry);
@@ -86,12 +85,12 @@ if (!OPTION->{iaddronly}) {
 			     $r->{"$OID{ifDescr}.$idx"} =~ $desc_r
 			and $re->{"$OID{ifAlias}.$idx"} =~ $alias_r
 			and $re->{"$OID{ifName}.$idx"}  =~ $name_r;
-		push @{$OUT->{$sysname}{ifaces}}, $idx;
+		push @{$OUT->{OPTION->{host}}{ifaces}}, $idx;
 	}
 }
 for my $addr (sort keys %$addrs) {
 	for (@{OPTION->{ifaddr}}) {
-		push @{$OUT->{$sysname}{ifaces}}, $addrs->{$addr}
+		push @{$OUT->{OPTION->{host}}{ifaces}}, $addrs->{$addr}
 			if $addr =~ m/$_$/;
 	}
 }
