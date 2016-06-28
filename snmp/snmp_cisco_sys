@@ -17,13 +17,15 @@ OPTION 'config|c=s',
         usage => '-c, --config <path-to-config>';
 
 START;
-PREFIX OPTION->{host};
 
 my $CONFIG = {};
 if (-f OPTION->{config}) {
 	$CONFIG = LoadFile(OPTION->{config})
 		or die "failed to load config file: ".OPTION->{config}.", $!";
+	BAIL CRITICAL => "host %s, not found in config %s", OPTION->{host}, OPTION->{config}
+		unless $CONFIG->{OPTION->{host}} && $CONFIG->{OPTION->{host}}{desc};
 }
+PREFIX $CONFIG->{OPTION->{host}}{desc};
 
 my %OID = (
 	sysName           => '.1.3.6.1.2.1.1.5.0',
@@ -39,26 +41,24 @@ my $snmp = Net::SNMP->session(
 	-hostname  => OPTION->{host},
 	-version   => 'snmpv2c',
 	-community => OPTION->{community},
-) or die "SNMP connection failed: $!.";
+) or BAIL CRITICAL => "SNMP connection failed: $!.";
 
 my $five_s = $OID{cpmCPUTotal5sec};
 my $one_m  = $OID{cpmCPUTotal1min};
 my $five_m = $OID{cpmCPUTotal5min};
 my $cpus = 1;
-my $r = $snmp->get_request(-varbindlist => [$OID{sysName}]);
-my $sysname = lc $r->{$OID{sysName}};
 my @oids = ($OID{ciscoMemoryPoolUsed}, $OID{ciscoMemoryPoolFree});
-if ($CONFIG->{$sysname}) {
-	for (@{$CONFIG->{$sysname}{cpus}}) {
+if ($CONFIG->{OPTION->{host}}) {
+	for (@{$CONFIG->{OPTION->{host}}{cpus}}) {
 		push @oids, "$OID{cpmCPUTotal5sec}.$_", "$OID{cpmCPUTotal1min}.$_", "$OID{cpmCPUTotal5min}.$_";
 	}
-	$cpus = scalar @{$CONFIG->{$sysname}{cpus}};
+	$cpus = scalar @{$CONFIG->{OPTION->{host}}{cpus}};
 } else {
 	push @oids, "$OID{cpmCPUTotal5sec}.1", "$OID{cpmCPUTotal1min}.1", "$OID{cpmCPUTotal5min}.1";
 }
 
 $r = $snmp->get_request(-varbindlist => \@oids);
-exit 1 unless defined $r;
+BAIL CRITICAL => "could not request cpu stats" unless defined $r;
 
 my %total = ('5s' => 0, '1m' => 0, '5m' => 0);
 for (keys %$r) {
@@ -69,8 +69,6 @@ for (keys %$r) {
 	$total{'5m'} += $r->{$_}
 		if $_ =~ m/$five_m/;
 }
-KEY 'snmp.sysName', $sysname;
-PREFIX $sysname;
 SAMPLE 'snmp.cisco.sys.cpu:5s', $total{'5s'} / $cpus;
 SAMPLE 'snmp.cisco.sys.cpu:1m', $total{'1m'} / $cpus;
 SAMPLE 'snmp.cisco.sys.cpu:5m', $total{'5m'} / $cpus;
