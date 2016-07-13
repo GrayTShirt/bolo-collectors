@@ -646,13 +646,13 @@ int collect_diskstats(void)
 
 		printf("RATE %i %s:diskio:%s:rd-iops %lu\n",  ts, PREFIX, name, rd[0]);
 		printf("RATE %i %s:diskio:%s:rd-miops %lu\n", ts, PREFIX, name, rd[1]);
-		printf("RATE %i %s:diskio:%s:rd-msec %lu\n",  ts, PREFIX, name, rd[2]);
-		printf("RATE %i %s:diskio:%s:rd-bytes %lu\n", ts, PREFIX, name, rd[3 ] * 512);
+		printf("RATE %i %s:diskio:%s:rd-bytes %lu\n", ts, PREFIX, name, rd[2] * 512);
+		printf("RATE %i %s:diskio:%s:rd-msec %lu\n",  ts, PREFIX, name, rd[3]);
 
 		printf("RATE %i %s:diskio:%s:wr-iops %lu\n",  ts, PREFIX, name, wr[0]);
 		printf("RATE %i %s:diskio:%s:wr-miops %lu\n", ts, PREFIX, name, wr[1]);
-		printf("RATE %i %s:diskio:%s:wr-msec %lu\n",  ts, PREFIX, name, wr[2]);
-		printf("RATE %i %s:diskio:%s:wr-bytes %lu\n", ts, PREFIX, name, wr[3] * 512);
+		printf("RATE %i %s:diskio:%s:wr-bytes %lu\n", ts, PREFIX, name, wr[2] * 512);
+		printf("RATE %i %s:diskio:%s:wr-msec %lu\n",  ts, PREFIX, name, wr[3]);
 	}
 
 	fclose(io);
