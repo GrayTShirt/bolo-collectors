@@ -1,9 +1,20 @@
+# Improvements
+
+- Support `-p` / `--prefix` flag in the `files` collector
+- Update help for the `netstat` collector to be more helpful
+- The `linux` collector now has a new pair of arguments,
+  `--include` and `--exclude` for matching things inclusively, or
+  excluding them altogether
+- The `nagwrap` collector now more deftly supports unresponsive or
+  timed-out check plugin runs
+- Refactor SNMP collectors to be more robust
+
 # Bug Fixes
 
-- share/* is now included in the dist tarball.
-  It was mistakenly omitted in previous releases.
-- `make distcheck` now works! (#11)
-
-# Developer Stuff
-
-- release process is now fully scripted in re/lease
+- Transmit RATE metrics as unsigned long integers, instead of
+  floating-point decimals
+- Fix formatting bug that resulted in a loss of KEY data submitted
+  from the Perl Bolo::Collector framework and the `linux` collector
+- Set the user-agent in the `httpd` collector to "httpd" (not
+  "nginx"), so that Apache use cases make sense
+- Fix mislabeled diskio metrics in `linux` collector
