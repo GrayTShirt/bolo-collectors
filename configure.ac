@@ -17,7 +17,7 @@
 #  with Bolo.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-AC_PREREQ(2.63)
+AC_PREREQ(2.59)
 AC_INIT([bolo-collectors], [m4_esyscmd([./version.sh])], [bolo@niftylogic.com])
 
 AC_CONFIG_SRCDIR([src/linux.c])
@@ -27,6 +27,7 @@ AC_CONFIG_MACRO_DIR([build])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 SAVE_LIBS=$LIBS
 AC_HAVE_LIBRARY(vigor,,    AC_MSG_ERROR(Missing libvigor - see http://github.com/jhunt/libvigor))
