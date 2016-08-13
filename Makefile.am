@@ -6,7 +6,7 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS  = -I build
 
 EXTRA_DIST  =
-EXTRA_DIST += bootstrap share
+EXTRA_DIST += bootstrap share version.sh
 EXTRA_DIST += lib/Bolo/Collector.pm
 
 LDADD = $(VIGOR_LIBS)
