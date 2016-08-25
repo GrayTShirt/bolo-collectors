@@ -530,6 +530,31 @@ int collect_openfiles(void)
 	return 0;
 }
 
+char* resolv_path(char *path)
+{
+	char  *buf  = malloc(256);
+	if (buf == NULL)
+		return path;
+	ssize_t size = 0;
+	char *dev  = strdup(path);
+
+	if ((size = readlink(dev, buf, 256)) == -1)
+		return path;
+	buf[size] = '\0';
+
+	int begin = 0;
+	int cnt   = 1;
+	while((begin = strspn(buf, "..")) != 0) {
+		buf += begin;
+		cnt++;
+	}
+	int i;
+	for (i = 0; i < cnt; i++)
+		dev[strlen(dev) - strlen(strrchr(dev, '/'))] = '\0';
+	strcat(dev, buf);
+	return dev;
+}
+
 int collect_mounts(void)
 {
 	FILE *io = fopen(PROC "/mounts", "r");
@@ -558,6 +583,7 @@ int collect_mounts(void)
 
 		if (!matches(MATCH_MOUNT, path))
 			continue;
+		dev = resolv_path(dev);
 
 		printf("KEY %s:fs:%s\n",  PREFIX, path);
 		printf("KEY %s:dev:%s\n",  PREFIX, dev);
