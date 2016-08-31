@@ -138,6 +138,15 @@ int parse_options(int argc, char **argv)
 			                "At least one rule must be specified; all will be evaluated\n"
 			                "together, in parallel\n"
 			                "You may need to quote these, if <comment> contains spaces.\n"
+			                "\n"
+			                "To add a comment to an iptable rule you will need add the\n"
+			                "following command line switches to your iptables call\n"
+			                "    -m comment --comment \"limit ssh access\"\n"
+			                "A full example:\n"
+			                "    iptables -A INPUT -j DROP -p tcp --dport 22 -m comment --comment \"limit ssh access\"\n"
+			                "\n"
+			                "EXAMPLE:\n"
+			                "    fw filter:INPUT:\"limit ssh access\"\n"
 			                "\n");
 			exit(0);
 		}
