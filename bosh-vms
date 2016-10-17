@@ -1,0 +1,136 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+sub usage
+{
+	my ($err) = @_;
+
+	print STDERR "$err\n" if $err;
+	print <<EOF;
+bosh (a Bolo collector)
+USAGE: bosh [options]
+
+options:
+   -h, --help               Show this help screen
+   -p, --prefix PREFIX      Use the given metric prefix
+   -B, --bosh BOSH-URL      URL of the BOSH director
+   -U, --username USERNAME  Username to authenticate to BOSH
+   -P, --password PASSWORD  Password to authenticate to BOSH
+   --no-verify              Skip SSL verification
+
+EOF
+	exit($err ? 1 : 0);
+}
+
+use JSON::PP;
+use MIME::Base64;
+use LWP::UserAgent;
+use Getopt::Long qw/:config bundling/;
+our %OPTIONS = (
+	prefix => $ENV{DBOLO_PREFIX},
+);
+GetOptions(\%OPTIONS, qw/
+	help|h|?
+	debug|D
+
+	prefix|p=s
+	bosh|B=s
+	username|U=s
+	password|P=s
+	verify!
+/) or usage();
+usage() if $OPTIONS{help};
+usage("Missing --bosh flag")     unless $OPTIONS{bosh};
+usage("Missing --username flag") unless $OPTIONS{username};
+usage("Missing --password flag") unless $OPTIONS{password};
+chomp($OPTIONS{prefix} = qx(hostname -f))
+	unless $OPTIONS{prefix};
+$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = $OPTIONS{verify};
+
+my $UA = LWP::UserAgent->new(
+	agent => "bolo-bosh/1.0",
+);
+
+my $creds = encode_base64("$OPTIONS{username}:$OPTIONS{password}");
+$UA->default_header('Authorization' => "Basic $creds");
+my $r = $UA->get("$OPTIONS{bosh}/deployments");
+unless ($r->is_success) {
+	print STDERR ">> failed ".$r->status_line." from $OPTIONS{bosh}\n";
+	exit 1;
+}
+my $data = decode_json($r->decoded_content);
+my $task_url;
+$UA->add_handler(response_redirect => sub {
+	my ($res, $ua) = @_;
+	# BOSH doesn't redirect properly given ports
+
+	if ($res->header('Location')) {
+		$task_url = $res->header('Location');
+		$task_url =~ s|https?://.*?/|$OPTIONS{bosh}/|;
+	}
+	return;
+});
+
+for my $d (@$data) {
+	print "KEY $OPTIONS{prefix}:$d->{name}=live\n";
+	for my $r (@{ $d->{releases} }) {
+		print "KEY $OPTIONS{prefix}:$d->{name}:release:$r->{name}=$r->{version}\n";
+	}
+	for my $s (@{ $d->{stemcells} }) {
+		print "KEY $OPTIONS{prefix}:$d->{name}:stemcell:$s->{name}=$s->{version}\n";
+	}
+
+	$task_url = "";
+	my $r = $UA->get("$OPTIONS{bosh}/deployments/$d->{name}/vms?format=full");
+	if ($task_url) {
+		while (1) {
+			my $r = $UA->get($task_url);
+			my $task = decode_json($r->decoded_content);
+			sleep 1 and next if $task->{state} ne 'done';
+			$r = $UA->get("$task_url/output?type=result");
+
+			my $l = $r->decoded_content;
+			$l =~ s/\s*$//;
+			my @jobs = map { decode_json($_) } split /\n/, $l;
+
+			my $ts = time;
+			for my $j (@jobs) {
+				print "STATE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index} OK $j->{job_state}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:disk:ephemeral:inodes-free.percent $j->{vitals}{disk}{ephemeral}{inode_percent}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:disk:ephemeral:space-free.percent $j->{vitals}{disk}{ephemeral}{percent}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:disk:system:inodes-free.percent $j->{vitals}{disk}{system}{inode_percent}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:disk:system:space-free.percent $j->{vitals}{disk}{system}{percent}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:disk:persistent:inodes-free.percent $j->{vitals}{disk}{persistent}{inode_percent}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:disk:persistent:space-free.percent $j->{vitals}{disk}{persistent}{percent}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:load.1m $j->{vitals}{load}[0]\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:load.5m $j->{vitals}{load}[1]\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:load.15m $j->{vitals}{load}[2]\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:swap.percent $j->{vitals}{swap}{percent}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:swap.kb $j->{vitals}{swap}{kb}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:mem.percent $j->{vitals}{mem}{percent}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:mem.kb $j->{vitals}{mem}{kb}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:cpu.sys $j->{vitals}{cpu}{sys}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:cpu.user $j->{vitals}{cpu}{user}\n";
+				print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:cpu.wait $j->{vitals}{cpu}{wait}\n";
+				print "KEY $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:type=$j->{vm_type}\n";
+				print "KEY $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:pool=$j->{resource_pool}\n";
+				print "KEY $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:ips=".scalar(@{$j->{ips}})."\n";
+				for (my $i = 0; $i < @{$j->{ips}}; $i++) {
+					print "KEY $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:ip.$i=$j->{ips}[$i]\n";
+				}
+				print "KEY $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}:type=$j->{vm_type}\n";
+				for my $p (@{ $j->{processes} }) {
+					print "STATE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}/$p->{name} OK $p->{state}\n";
+					print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}/$p->{name}:cpu $p->{cpu}{total}\n";
+					print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}/$p->{name}:mem.percent $p->{mem}{percent}\n";
+					print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}/$p->{name}:mem.kb $p->{mem}{kb}\n";
+					print "SAMPLE $ts $OPTIONS{prefix}:$d->{name}:$j->{job_name}/$j->{index}/$p->{name}:uptime.s $p->{uptime}{secs}\n";
+				}
+			}
+			last;
+		}
+	}
+}
+
+exit 0;
