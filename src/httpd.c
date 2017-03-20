@@ -78,6 +78,24 @@ static size_t apache_writer(void *buf, size_t each, size_t n, void *user)
 		printf("SAMPLE %i %s:apache:request.size %lf\n", ts, PREFIX, b);
 		printf("SAMPLE %i %s:apache:workers.busy %lu\n", ts, PREFIX, v[2]);
 		printf("SAMPLE %i %s:apache:workers.idle %lu\n", ts, PREFIX, v[3]);
+	} else
+	if (sscanf(buf, "Total Accesses: %lu\n"
+	                "Total kBytes: %lu\n"
+	                "CPULoad: %*f\n"
+	                "Uptime: %*u\n"
+	                "ReqPerSec: %*f\n"
+	                "BytesPerSec: %*f\n"
+	                "BytesPerReq: %lf\n"
+	                "BusyWorkers: %lu\n"
+	                "IdleWorkers: %lu\n",
+	                &v[0], &v[1], &b, &v[2], &v[3]) == 5) {
+
+		int32_t ts = time_s();
+		printf("RATE %i %s:apache:requests.total %lu\n", ts, PREFIX, v[0]);
+		printf("RATE %i %s:apache:requests.bytes %lu\n", ts, PREFIX, v[1] * 1024);
+		printf("SAMPLE %i %s:apache:request.size %lf\n", ts, PREFIX, b);
+		printf("SAMPLE %i %s:apache:workers.busy %lu\n", ts, PREFIX, v[2]);
+		printf("SAMPLE %i %s:apache:workers.idle %lu\n", ts, PREFIX, v[3]);
 	}
 	return n * each;
 }
